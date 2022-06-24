@@ -1,0 +1,26 @@
+{
+  "id": "cars-v0",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://mock-mock-slo-tdc.dev.target.com",
+            "region": "global"
+          }
+        ]
+      },
+      "healthcheck": {
+                "type": "http",
+                "method": "GET",
+                "path": "/health"
+            }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}

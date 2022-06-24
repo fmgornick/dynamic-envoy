@@ -1,0 +1,21 @@
+{
+  "id": "cars-v2",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp-vm.dev.target.com",
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}

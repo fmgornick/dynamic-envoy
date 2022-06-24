@@ -1,0 +1,81 @@
+{
+  "id": "cars-v3",
+  "availability": [
+    "external",
+    "internal"
+  ],
+  "backends": [
+    {
+      "match": {
+        "path": {
+          "type": "exact",
+          "pattern": "/cars/v3/ratelimit"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp-vm.dev.target.com",
+            "region": "global"
+          }
+        ]
+      },
+      "rate_limit": {
+        "field": "client-ip",
+        "count": 10
+      }
+    },
+    {
+      "match": {
+        "path": {
+          "type": "exact",
+          "pattern": "/cars/v3/ratelimit/apikey"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp-vm.dev.target.com",
+            "region": "global"
+          }
+        ]
+      },
+      "rate_limit": {
+        "field": "api-key",
+        "count": 5
+      }
+    },
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp-vm.dev.target.com",
+            "region": "global"
+          }
+        ]
+      },
+      "rate_limit": {
+        "count": 15
+      }
+    },
+    {
+      "availability": [
+        "internal"
+      ],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp-vm.dev.target.com",
+            "region": "global"
+          }
+        ]
+      },
+      "rate_limit": {
+        "count": 1
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}

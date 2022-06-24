@@ -1,0 +1,21 @@
+{
+  "id": "httpbin-v1",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://httpbin.dev.target.com",
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}

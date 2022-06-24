@@ -1,0 +1,22 @@
+{
+  "id": "groups_test-v1",
+  "availability": [
+    "external",
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://lydelltestapp.prod.target.com",
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "TTS-API-Gateway-MPLS"
+  ]
+}

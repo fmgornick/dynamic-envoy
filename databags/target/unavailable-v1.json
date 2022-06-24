@@ -1,0 +1,18 @@
+{
+  "id": "unavailable-v1",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://foo.target.com",
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ]
+}

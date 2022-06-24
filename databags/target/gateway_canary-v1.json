@@ -1,0 +1,37 @@
+{
+  "id": "gateway_canary-v1",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "match": {
+        "path": {
+          "type": "starts_with",
+          "pattern": "/gateway_canary/v1/vmaas"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {"address": "http://10.58.109.222:8888", "region": "global"}
+        ]
+      }
+    },
+    {
+      "match": {
+        "path": {
+          "type": "starts_with",
+          "pattern": "/gateway_canary/v1/tap"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {"address": "https://gatewaycanary.dev.target.com", "region": "global"}
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}

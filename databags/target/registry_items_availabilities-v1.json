@@ -1,0 +1,13 @@
+{
+  "id": "registry_items_availabilities-v1",
+  "availability": [
+    "internal",
+    "external"
+  ],
+  "backends": [
+    {
+      "servers": {}
+    }
+  ],
+  "groups": []
+}

@@ -1,0 +1,28 @@
+{
+  "id": "balance-v1",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "balance": "static-rr",
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://sydneysapp.dev.target.com",
+            "weight": 2,
+            "region": "global"
+          },
+          {
+            "address": "https://lydelltestapp.dev.target.com",
+            "weight": 8,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}
