@@ -1,4 +1,3 @@
-// NOTE: not sure if xds server works with other types of proxies, so we might need to add a parent server class
 package xdsServer
 
 import (
@@ -6,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"google.golang.org/grpc"
+	grpc "google.golang.org/grpc"
 
 	clusterservice "github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3"
 	discoverygrpc "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"

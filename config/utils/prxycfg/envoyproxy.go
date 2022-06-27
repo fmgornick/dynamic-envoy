@@ -4,24 +4,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
-	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	ptypes "github.com/golang/protobuf/ptypes"
+	wpb "google.golang.org/protobuf/types/known/wrapperspb"
 
 	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	router "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
+	wellknown "github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
 
-// global mappings for envoy proxy
-var pathType = map[string]string{
-	"exact":       "path",
-	"starts_with": "prefix",
-}
 var clusterPolicy = map[string]int32{
 	"round_robin":      0,
 	"least_request":    1,
@@ -32,23 +28,12 @@ var clusterPolicy = map[string]int32{
 	"lb_policy_config": 7,
 }
 
-type Envoy struct {
-	Listeners map[string]*listener.Listener
-	Clusters  map[string]*cluster.Cluster
-	Routes    map[string]*route.Route
-	Endpoints map[string]*endpoint.LbEndpoint
-}
-
-func NewEnvoyConfig() *Envoy {
-	return &Envoy{
-		Listeners: make(map[string]*listener.Listener),
-		Clusters:  make(map[string]*cluster.Cluster),
-		Routes:    make(map[string]*route.Route),
-		Endpoints: make(map[string]*endpoint.LbEndpoint),
+func MakeListener(address string, name string, port uint) *listener.Listener {
+	router := &router.Router{}
+	routerpb, err := ptypes.MarshalAny(router)
+	if err != nil {
+		panic(err)
 	}
-}
-
-func (e *Envoy) MakeListener(address string, name string, port uint) {
 	manager := &hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
 		StatPrefix: "http",
@@ -69,18 +54,22 @@ func (e *Envoy) MakeListener(address string, name string, port uint) {
 						},
 					},
 				},
-				RouteConfigName: name + "_route",
+				RouteConfigName: name + "-routes",
 			},
 		},
+		// NOTE: possible cause of problem
 		HttpFilters: []*hcm.HttpFilter{{
 			Name: wellknown.Router,
+			ConfigType: &hcm.HttpFilter_TypedConfig{
+				TypedConfig: routerpb,
+			},
 		}},
 	}
 	pbst, err := ptypes.MarshalAny(manager)
 	if err != nil {
 		panic(err)
 	}
-	e.Listeners[name] = &listener.Listener{
+	return &listener.Listener{
 		Name: name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
@@ -93,6 +82,7 @@ func (e *Envoy) MakeListener(address string, name string, port uint) {
 				},
 			},
 		},
+		// NOTE: possible cause of problem
 		FilterChains: []*listener.FilterChain{{
 			Filters: []*listener.Filter{{
 				Name: wellknown.HTTPConnectionManager,
@@ -104,8 +94,8 @@ func (e *Envoy) MakeListener(address string, name string, port uint) {
 	}
 }
 
-func (e *Envoy) MakeCluster(name string, policy string) {
-	e.Clusters[name] = &cluster.Cluster{
+func MakeCluster(name string, policy string) *cluster.Cluster {
+	return &cluster.Cluster{
 		Name:                 name,
 		ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_EDS},
@@ -132,10 +122,10 @@ func (e *Envoy) MakeCluster(name string, policy string) {
 	}
 }
 
-func (e *Envoy) MakeRoute(clusterName string, pathPattern string, pathType string) {
+func MakeRoute(clusterName string, pathPattern string, pathType string) *route.Route {
 	switch pathType {
-	case "prefix":
-		e.Routes[clusterName] = &route.Route{
+	case "starts_with":
+		return &route.Route{
 			Name: clusterName,
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_Prefix{
@@ -150,8 +140,8 @@ func (e *Envoy) MakeRoute(clusterName string, pathPattern string, pathType strin
 				},
 			},
 		}
-	case "path":
-		e.Routes[clusterName] = &route.Route{
+	case "exact":
+		return &route.Route{
 			Name: clusterName,
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_Path{
@@ -171,10 +161,9 @@ func (e *Envoy) MakeRoute(clusterName string, pathPattern string, pathType strin
 	}
 }
 
-func (e *Envoy) MakeEndpoint(address string, clusterName string, name string, port uint, weight uint) {
-	var edp *endpoint.LbEndpoint
+func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 	if weight == 0 {
-		edp = &endpoint.LbEndpoint{
+		return &endpoint.LbEndpoint{
 			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
 				Endpoint: &endpoint.Endpoint{
 					Address: &core.Address{
@@ -192,8 +181,8 @@ func (e *Envoy) MakeEndpoint(address string, clusterName string, name string, po
 			},
 		}
 	} else {
-		edp = &endpoint.LbEndpoint{
-			LoadBalancingWeight: &wrapperspb.UInt32Value{
+		return &endpoint.LbEndpoint{
+			LoadBalancingWeight: &wpb.UInt32Value{
 				Value: uint32(weight),
 			},
 			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
@@ -212,8 +201,5 @@ func (e *Envoy) MakeEndpoint(address string, clusterName string, name string, po
 				},
 			},
 		}
-		e.Endpoints[name] = edp
-		// e.Clusters[clusterName].LoadAssignment.Endpoints[0].LbEndpoints =
-		// 	append(e.Clusters[clusterName].LoadAssignment.Endpoints[0].LbEndpoints, edp)
 	}
 }

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fmgornick/dynamic-envoy/config/utils/univcfg"
-	"github.com/fmgornick/dynamic-envoy/config/utils/usercfg"
+	univcfg "github.com/fmgornick/dynamic-envoy/config/utils/univcfg"
+	usercfg "github.com/fmgornick/dynamic-envoy/config/utils/usercfg"
 )
 
 // parser has all the databags and an instance of our resource
@@ -66,6 +66,43 @@ func (bp *BagParser) AddClusters() error {
 	return nil
 }
 
+// add routes to listener's route array
+// add routes to route map
+func (bp *BagParser) AddRoutes() error {
+	// iterate through all the backends and create a route
+	for _, bag := range bp.Bags {
+		for _, backend := range bag.Backends {
+			clusterName, err := getClusterName(bag, backend)
+			if err != nil {
+				return err
+			}
+			if backend.Match.Path.Pattern == "" {
+				bp.Config.AddRoute(clusterName, "/"+strings.Replace(bag.Id, "-", "/", -1), "exact")
+			} else {
+				bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, backend.Match.Path.Type)
+			}
+		}
+	}
+	for name, route := range bp.Config.Routes {
+		if route.Availability == uint8(univcfg.INTERNAL) {
+			bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, name)
+		} else if route.Availability == uint8(univcfg.EXTERNAL) {
+			bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, name)
+		}
+	}
+	for name, route := range bp.Config.Routes {
+		if route.Availability == uint8(univcfg.BOTH) {
+			if bp.Config.Routes[name[:len(name)-3]+"-in"] == nil {
+				bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, name)
+			}
+			if bp.Config.Routes[name[:len(name)-3]+"-ex"] == nil {
+				bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, name)
+			}
+		}
+	}
+	return nil
+}
+
 func (bp *BagParser) AddEndpoints() error {
 	for _, bag := range bp.Bags {
 		for _, backend := range bag.Backends {
@@ -73,8 +110,11 @@ func (bp *BagParser) AddEndpoints() error {
 			if err != nil {
 				return err
 			}
-			for i, endpoint := range backend.Server.Endpoints {
-				endpointName := clusterName + "-" + strconv.Itoa(i)
+			// if route doesn't have any endpoints, then we don't want to delete the cluster
+			if len(backend.Server.Endpoints) == 0 {
+				delete(bp.Config.Clusters, clusterName)
+			}
+			for _, endpoint := range backend.Server.Endpoints {
 				var port uint
 				var address string
 				split := strings.Split(endpoint.Address, ":")
@@ -94,45 +134,7 @@ func (bp *BagParser) AddEndpoints() error {
 					address = endpoint.Address
 					port = endpoint.Port
 				}
-				bp.Config.AddEndpoint(address, clusterName, endpointName, port, endpoint.Region, endpoint.Weight)
-				bp.Config.Clusters[clusterName].Endpoints = append(bp.Config.Clusters[clusterName].Endpoints, endpointName)
-			}
-		}
-	}
-	return nil
-}
-
-// add routes to listener's route array
-// add routes to route map
-func (bp *BagParser) AddRoutes() error {
-	// iterate through all the backends and create a route
-	for _, bag := range bp.Bags {
-		for _, backend := range bag.Backends {
-			clusterName, err := getClusterName(bag, backend)
-			if err != nil {
-				return err
-			}
-			if backend.Match.Path.Pattern == "" {
-				bp.Config.AddRoute(clusterName, "/"+strings.Replace(bag.Id, "-", "/", -1), "exact")
-			} else {
-				bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, backend.Match.Path.Type)
-			}
-		}
-	}
-	for routeName := range bp.Config.Routes {
-		if routeName[len(routeName)-3:] == "-in" {
-			bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, routeName)
-		} else if routeName[len(routeName)-3:] == "-ex" {
-			bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, routeName)
-		}
-	}
-	for routeName := range bp.Config.Routes {
-		if routeName[len(routeName)-3:] == "-ie" {
-			if bp.Config.Routes[routeName[:len(routeName)-3]+"-in"] == nil {
-				bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, routeName)
-			}
-			if bp.Config.Routes[routeName[:len(routeName)-3]+"-ex"] == nil {
-				bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, routeName)
+				bp.Config.AddEndpoint(address, clusterName, port, endpoint.Region, endpoint.Weight)
 			}
 		}
 	}

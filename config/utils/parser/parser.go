@@ -1,7 +1,6 @@
 package parser
 
-// parser interface
-// every parser should have these functions
+// takes specific type of user configuration and returns universal configuration
 type Parser interface {
 	// takes the user configuration and outputs universal config
 	Parse() error

@@ -3,8 +3,8 @@ package print
 import (
 	"encoding/json"
 
-	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
+	types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
+	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 )
 
 func PrintMap(m map[string][]types.Resource) {

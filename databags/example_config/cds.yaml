@@ -1,0 +1,16 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+  name: fletcher-in
+  connect_timeout: {seconds: 5}
+  type: EDS
+  eds_cluster_config:
+    eds_config:
+      resource_api_version: V3
+      path_config_source:
+        path: ./eds.yaml
+  lb_policy: ROUND_ROBIN
+  # typed_extension_protocol_options:
+  #   envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+  #     "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+  #     explicit_http_config:
+  #       http2_protocol_options: {}

@@ -1,0 +1,22 @@
+{
+  "id": "fletcher-gornick",
+  "availability": [
+    "internal"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://youtube.com",
+            "port": 443,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}
