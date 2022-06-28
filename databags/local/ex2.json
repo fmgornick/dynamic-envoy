@@ -1,15 +1,43 @@
 {
-  "id": "fletcher-gornick",
+  "id": "",
   "availability": [
-    "internal"
+    "internal",
+    "external"
   ],
   "backends": [
     {
+      "availability": [
+        "external"
+      ],
       "servers": {
         "endpoints": [
           {
-            "address": "https://youtube.com",
-            "port": 443,
+            "address": "127.0.0.1",
+            "port": 3333,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 4444,
+            "region": "global"
+          }
+        ]
+      }
+    },
+    {
+      "availability": [
+        "internal"
+      ],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 1111,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 2222,
             "region": "global"
           }
         ]
@@ -20,3 +48,4 @@
     "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
   ]
 }
+

@@ -6,62 +6,6 @@
   ],
   "backends": [
     {
-      "availability": [
-        "internal"
-      ],
-      "balance": "static-rr",
-      "servers": {
-        "endpoints": [
-          {
-            "address": "127.0.0.1",
-            "port": 1111,
-            "weight": 6,
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1",
-            "port": 2222,
-            "weight": 2,
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1",
-            "port": 3333,
-            "weight": 2,
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1",
-            "port": 4444,
-            "weight": 2,
-            "region": "global"
-          }
-        ]
-      }
-    },
-    {
-      "availability": [
-        "external"
-      ],
-      "balance": "static-rr",
-      "servers": {
-        "endpoints": [
-          {
-            "address": "127.0.0.1",
-            "port": 2222,
-            "weight": 1,
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1",
-            "port": 3333,
-            "weight": 2,
-            "region": "global"
-          }
-        ]
-      }
-    },
-    {
       "match": {
         "path": {
           "type": "starts_with",
@@ -93,6 +37,62 @@
           {
             "address": "127.0.0.1",
             "port": 3333,
+            "region": "global"
+          }
+        ]
+      }
+    },
+    {
+      "availability": [
+        "external"
+      ],
+      "balance": "static-rr",
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 2222,
+            "weight": 1,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 3333,
+            "weight": 2,
+            "region": "global"
+          }
+        ]
+      }
+    },
+    {
+      "availability": [
+        "internal"
+      ],
+      "balance": "static-rr",
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 1111,
+            "weight": 6,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 2222,
+            "weight": 2,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 3333,
+            "weight": 2,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 4444,
+            "weight": 2,
             "region": "global"
           }
         ]

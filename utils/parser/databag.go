@@ -5,20 +5,21 @@ import (
 	"strconv"
 	"strings"
 
-	univcfg "github.com/fmgornick/dynamic-envoy/config/utils/univcfg"
-	usercfg "github.com/fmgornick/dynamic-envoy/config/utils/usercfg"
+	univcfg "github.com/fmgornick/dynamic-envoy/utils/config/universal"
+	usercfg "github.com/fmgornick/dynamic-envoy/utils/config/user"
 )
 
 // parser has all the databags and an instance of our resource
 // uses the databags to create the resource
 type BagParser struct {
-	Bags   []usercfg.Bag
-	Config univcfg.Config
+	Bags   []usercfg.Bag  // user configuration (input)
+	Config univcfg.Config // universal configuration (output)
 }
 
 // assuming our parser contains a valid array of bags...
 // we create 2 listener configurations and add all the routes, clusters, and endpoints
 func Parse(bags []usercfg.Bag) (*univcfg.Config, error) {
+	// initialize bag parser variables
 	var bp BagParser
 	bp.Config = *univcfg.NewConfig()
 	bp.Bags = bags
@@ -42,24 +43,31 @@ func Parse(bags []usercfg.Bag) (*univcfg.Config, error) {
 		return nil, fmt.Errorf("unable to add routes: %+v", err)
 	}
 
+	// return new universal config for further processing
 	return &bp.Config, nil
 }
 
 // NOTE: always returns nil, might want to change up implementation a bit
+// add listeners to listener map
 func (bp *BagParser) AddListeners() error {
+	// hard code listener creation
+	// if given data bags, then it's assumed there will only be 2 listeners
 	bp.Config.AddListener("127.0.0.1", "internal", 7777)
 	bp.Config.AddListener("127.0.0.1", "external", 8888)
 	return nil
 }
 
+// add clusters to cluster map
 func (bp *BagParser) AddClusters() error {
 	for _, bag := range bp.Bags {
 		for _, backend := range bag.Backends {
+			// create cluster name from bag id / path
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
 				return err
 			}
 
+			// call universal configs add cluster method to append to our  cluster configs
 			bp.Config.AddCluster(clusterName, "round_robin")
 		}
 	}
@@ -69,13 +77,13 @@ func (bp *BagParser) AddClusters() error {
 // add routes to listener's route array
 // add routes to route map
 func (bp *BagParser) AddRoutes() error {
-	// iterate through all the backends and create a route
 	for _, bag := range bp.Bags {
 		for _, backend := range bag.Backends {
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
 				return err
 			}
+			// check if specific path provided, otherwise get path from bag id
 			if backend.Match.Path.Pattern == "" {
 				bp.Config.AddRoute(clusterName, "/"+strings.Replace(bag.Id, "-", "/", -1), "exact")
 			} else {
@@ -83,6 +91,7 @@ func (bp *BagParser) AddRoutes() error {
 			}
 		}
 	}
+	// add the strictly internal or external routes to our listener route array
 	for name, route := range bp.Config.Routes {
 		if route.Availability == uint8(univcfg.INTERNAL) {
 			bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, name)
@@ -90,6 +99,7 @@ func (bp *BagParser) AddRoutes() error {
 			bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, name)
 		}
 	}
+	// now add the "available for both" routes if their more specific route isn't already in the array
 	for name, route := range bp.Config.Routes {
 		if route.Availability == uint8(univcfg.BOTH) {
 			if bp.Config.Routes[name[:len(name)-3]+"-in"] == nil {
@@ -103,20 +113,25 @@ func (bp *BagParser) AddRoutes() error {
 	return nil
 }
 
+// add endpoints to endpoint map
 func (bp *BagParser) AddEndpoints() error {
 	for _, bag := range bp.Bags {
 		for _, backend := range bag.Backends {
+			// retrieve name of cluster the endpoint maps to
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
 				return err
 			}
-			// if route doesn't have any endpoints, then we don't want to delete the cluster
+			// if server doesn't have any endpoints, then we don't want to delete the cluster
 			if len(backend.Server.Endpoints) == 0 {
 				delete(bp.Config.Clusters, clusterName)
 			}
 			for _, endpoint := range backend.Server.Endpoints {
 				var port uint
 				var address string
+				// check if a port is specified in the url
+				// if there is a route, then assign it to our port variable and remove it from the address string
+				// otherwise, just leave the address as is and assign as 443
 				split := strings.Split(endpoint.Address, ":")
 
 				if len(split) == 3 {
@@ -134,6 +149,7 @@ func (bp *BagParser) AddEndpoints() error {
 					address = endpoint.Address
 					port = endpoint.Port
 				}
+				// add endpoints to endpoint map
 				bp.Config.AddEndpoint(address, clusterName, port, endpoint.Region, endpoint.Weight)
 			}
 		}
@@ -148,12 +164,14 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 	var aBack string
 
 	var name string
+	// if a path is given, then we want to make it our new cluster id
 	if backend.Match.Path.Pattern == "" {
 		name = bag.Id
 	} else {
 		name = strings.Replace(backend.Match.Path.Pattern, "/", "-", -1)[1:]
 	}
 
+	// add extension for the availability of the bag
 	switch len(bag.Availability) {
 	case 0:
 		aBag = "ie"
@@ -174,6 +192,7 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 		return "", fmt.Errorf("invalid element in bag availability array")
 	}
 
+	// add extension for the availability of the backend
 	switch len(backend.Availability) {
 	case 0:
 		aBack = "ie"
@@ -194,6 +213,7 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 		return "", fmt.Errorf("invalid element in backend availability array")
 	}
 
+	// compare the two extensions to create the actual extension for the cluster
 	switch aBag == aBack {
 	case true:
 		newName = name + "-" + aBack

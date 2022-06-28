@@ -21,7 +21,7 @@ dynamic_resources:
       grpc_services:
         - envoy_grpc:
             cluster_name: xds_cluster
-      set_node_on_first_message_only: false
+      set_node_on_first_message_only: true
   lds_config:
     resource_api_version: V3
     api_config_source:
@@ -30,7 +30,7 @@ dynamic_resources:
       grpc_services:
         - envoy_grpc:
             cluster_name: xds_cluster
-      set_node_on_first_message_only: false
+      set_node_on_first_message_only: true
 node:
   id: envoy-instance
   cluster: envoy-service

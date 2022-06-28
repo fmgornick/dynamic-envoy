@@ -17,10 +17,6 @@ import (
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 )
 
-const (
-	maxStreams = 1000000
-)
-
 // register services
 func registerServer(grpcServer *grpc.Server, server server.Server) {
 	discoverygrpc.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)

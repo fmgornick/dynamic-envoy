@@ -20,7 +20,6 @@ type Listener struct {
 	Routes  []string // maps to cluster from specific path
 }
 
-// if match.type not set to "exact" or "starts_with", then listener only has one route mapping to single cluster
 type Route struct {
 	Availability uint8  // tells us if the route is internal, external or both
 	ClusterName  string // maps upstream from route, could have multiple upstreams
@@ -42,6 +41,7 @@ type Endpoint struct {
 	Weight      uint   // should default to 0 unless "Balance" set to weighted round robin
 }
 
+// initialize map fields in our object
 func NewConfig() *Config {
 	return &Config{
 		Listeners: make(map[string]*Listener),
@@ -51,6 +51,7 @@ func NewConfig() *Config {
 	}
 }
 
+// add a listener to our configuration object
 func (cfg *Config) AddListener(address string, name string, port uint) {
 	cfg.Listeners[name] = &Listener{
 		Address: address,
@@ -59,6 +60,8 @@ func (cfg *Config) AddListener(address string, name string, port uint) {
 	}
 }
 
+// add a cluster to our configuration object
+// also set availability flag based on cluster name
 func (cfg *Config) AddCluster(name string, policy string) {
 	var availability uint8
 	switch name[len(name)-3:] {
@@ -78,6 +81,8 @@ func (cfg *Config) AddCluster(name string, policy string) {
 	}
 }
 
+// add a route to our configuration object
+// also set availability flag based on cluster name
 func (cfg *Config) AddRoute(clusterName string, path string, pathType string) {
 	var availability uint8
 	switch clusterName[len(clusterName)-3:] {
@@ -98,6 +103,7 @@ func (cfg *Config) AddRoute(clusterName string, path string, pathType string) {
 	}
 }
 
+// add an endpoint to our configuration object
 func (cfg *Config) AddEndpoint(address string, clusterName string, port uint, region string, weight uint) {
 	cfg.Endpoints[clusterName] = append(cfg.Endpoints[clusterName], &Endpoint{
 		Address:     address,

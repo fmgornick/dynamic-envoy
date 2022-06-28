@@ -5,16 +5,19 @@ import (
 
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
-	parser "github.com/fmgornick/dynamic-envoy/config/utils/parser"
-	processor "github.com/fmgornick/dynamic-envoy/config/utils/processor"
-	usercfg "github.com/fmgornick/dynamic-envoy/config/utils/usercfg"
-	xdsServer "github.com/fmgornick/dynamic-envoy/config/utils/xdsServer"
+	usercfg "github.com/fmgornick/dynamic-envoy/utils/config/user"
+	parser "github.com/fmgornick/dynamic-envoy/utils/parser"
+	processor "github.com/fmgornick/dynamic-envoy/utils/processor"
+	xdsServer "github.com/fmgornick/dynamic-envoy/utils/xdsServer"
 )
 
-const xdsPort = 6969
+const (
+	directory = "../databags/local"
+	xdsPort   = 6969
+)
 
 func main() {
-	bags, err := usercfg.ParseFile("../databags/local/ex1.json")
+	bags, err := usercfg.ParseFile(directory)
 	if err != nil {
 		panic(err)
 	}

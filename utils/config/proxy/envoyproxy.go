@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	ptypes "github.com/golang/protobuf/ptypes"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	wpb "google.golang.org/protobuf/types/known/wrapperspb"
 
 	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -28,9 +29,10 @@ var clusterPolicy = map[string]int32{
 	"lb_policy_config": 7,
 }
 
+// create listener envoyproxy configuration
 func MakeListener(address string, name string, port uint) *listener.Listener {
 	router := &router.Router{}
-	routerpb, err := ptypes.MarshalAny(router)
+	routerpb, err := anypb.New(router)
 	if err != nil {
 		panic(err)
 	}
@@ -54,6 +56,7 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 						},
 					},
 				},
+				// link internal listener to internal route configuration
 				RouteConfigName: name + "-routes",
 			},
 		},
@@ -65,7 +68,8 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 			},
 		}},
 	}
-	pbst, err := ptypes.MarshalAny(manager)
+	// pbst, err := ptypes.MarshalAny(manager)
+	pbst, err := anypb.New(manager)
 	if err != nil {
 		panic(err)
 	}
@@ -94,14 +98,19 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 	}
 }
 
+// create cluster envoyproxy configuration
 func MakeCluster(name string, policy string) *cluster.Cluster {
 	return &cluster.Cluster{
 		Name:                 name,
-		ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
+		ConnectTimeout:       durationpb.New(5 * time.Second),
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_EDS},
-		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
+		// use specified load balance policy from universal configuration
+		LbPolicy: cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 		// LoadAssignment:       makeEndpoint(clusterName, UpstreamHost),
 		// DnsLookupFamily:  cluster.Cluster_V4_ONLY,
+
+		// call endpoint configuration instead of statically inserting endpoint
+		// load assignment config
 		EdsClusterConfig: &cluster.Cluster_EdsClusterConfig{
 			EdsConfig: &core.ConfigSource{
 				ResourceApiVersion: resource.DefaultAPIVersion,
@@ -122,7 +131,10 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 	}
 }
 
+// create route envoyproxy configuration
 func MakeRoute(clusterName string, pathPattern string, pathType string) *route.Route {
+	// if we only care about the start of the path then we use the prefix match
+	// if we care about the whole path then we use the path match
 	switch pathType {
 	case "starts_with":
 		return &route.Route{
@@ -161,7 +173,10 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 	}
 }
 
+// create endpoint envoyproxy configuration
 func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
+	// give the endpoints an assigned weight only if weight is specified
+	// in the user configuration
 	if weight == 0 {
 		return &endpoint.LbEndpoint{
 			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
