@@ -2,7 +2,7 @@
 package processor
 
 import (
-	"context"
+	// "context"
 	"fmt"
 	"strconv"
 
@@ -24,10 +24,10 @@ type EnvoyProcessor struct {
 }
 
 // take in the universal config and output the cache for envoyproxy
-func Process(config *univcfg.Config) (*cache.SnapshotCache, error) {
+func Process(proxyConfig cache.SnapshotCache, univConfig *univcfg.Config) (*cache.Snapshot, error) {
 	var e EnvoyProcessor
-	e.Config = *config
-	e.Cache = cache.NewSnapshotCache(false, cache.IDHash{}, nil)
+	e.Config = *univConfig
+	e.Cache = proxyConfig
 
 	var err error
 	var snapshot *cache.Snapshot
@@ -40,12 +40,15 @@ func Process(config *univcfg.Config) (*cache.SnapshotCache, error) {
 		return nil, fmt.Errorf("snapshot inconsistency: \n\n%+v", err)
 	}
 	// set our cache
-	if err = e.Cache.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
-		return nil, fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
-	}
+	// if err = e.Cache.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
+	// 	return fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
+	// }
+	// if err = proxyConfig.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
+	// 	return fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
+	// }
 
 	// return cache to the caller
-	return &e.Cache, nil
+	return snapshot, nil
 }
 
 // create resources array to hold all our listener configurations

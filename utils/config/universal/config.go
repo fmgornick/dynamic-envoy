@@ -113,3 +113,30 @@ func (cfg *Config) AddEndpoint(address string, clusterName string, port uint, re
 		Weight:      weight,
 	})
 }
+
+func MergeConfigs(configs map[string]*Config) *Config {
+	bigConfig := NewConfig()
+	bigConfig.AddListener("127.0.0.1", "internal", 7777)
+	bigConfig.AddListener("127.0.0.1", "external", 8888)
+
+	for _, config := range configs {
+		for _, l := range config.Listeners {
+			for _, r := range l.Routes {
+				bigConfig.Listeners[l.Name].Routes = append(bigConfig.Listeners[l.Name].Routes, r)
+			}
+		}
+		for _, c := range config.Clusters {
+			bigConfig.AddCluster(c.Name, c.Policy)
+		}
+		for _, r := range config.Routes {
+			bigConfig.AddRoute(r.ClusterName, r.Path, r.Type)
+		}
+		for _, edps := range config.Endpoints {
+			for _, e := range edps {
+				bigConfig.AddEndpoint(e.Address, e.ClusterName, e.Port, e.Region, e.Weight)
+			}
+		}
+	}
+
+	return bigConfig
+}

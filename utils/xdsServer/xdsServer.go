@@ -39,7 +39,9 @@ func RunServer(ctx context.Context, server server.Server, port uint) {
 
 	registerServer(grpcServer, server)
 
+	fmt.Printf("xds server listening on port %d...\n\n", port)
 	if err = grpcServer.Serve(lis); err != nil {
 		panic(err)
 	}
+	fmt.Printf("xds server listening on port %d...\n\n", port)
 }

@@ -1,0 +1,31 @@
+{
+  "id": "",
+  "availability": [
+    "internal",
+    "external"
+  ],
+  "backends": [
+    {
+      "availability": [
+        "internal"
+      ],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 1111,
+            "region": "global"
+          },
+          {
+            "address": "127.0.0.1",
+            "port": 2222,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ],
+  "groups": [
+    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
+  ]
+}
