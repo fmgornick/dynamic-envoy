@@ -3,6 +3,7 @@ package processor
 
 import (
 	// "context"
+	"context"
 	"fmt"
 	"strconv"
 
@@ -20,35 +21,38 @@ import (
 type EnvoyProcessor struct {
 	Config  univcfg.Config      // universal config (input)
 	Cache   cache.SnapshotCache // snapshot config (output for envoyproxy)
+	Node    string              // name of node for snapshot
 	version uint                // keeps track of version number for our envoyproxy config
 }
 
-// take in the universal config and output the cache for envoyproxy
-func Process(proxyConfig cache.SnapshotCache, univConfig *univcfg.Config) (*cache.Snapshot, error) {
-	var e EnvoyProcessor
-	e.Config = *univConfig
-	e.Cache = proxyConfig
+func NewProcessor(node string) *EnvoyProcessor {
+	return &EnvoyProcessor{
+		Cache:   cache.NewSnapshotCache(false, cache.IDHash{}, nil),
+		Node:    node,
+		version: 0,
+	}
+}
 
-	var err error
-	var snapshot *cache.Snapshot
+// take in the universal config and output the cache for envoyproxy
+func (e *EnvoyProcessor) Process(univConfig *univcfg.Config) error {
+	e.Config = *univConfig
+
 	// this is the function that calls all the others to create the instance
-	if snapshot, err = e.GenerateSnapshot(); err != nil {
-		return nil, fmt.Errorf("couldn't generate snapshot: %+v", err)
+	snapshot, err := e.GenerateSnapshot()
+	if err != nil {
+		return fmt.Errorf("problem generating snapshot: %+v", err)
 	}
 	// make sure our cache is consistent with itself
 	if err = snapshot.Consistent(); err != nil {
-		return nil, fmt.Errorf("snapshot inconsistency: \n\n%+v", err)
+		return fmt.Errorf("snapshot inconsistency: \n\n%+v", err)
 	}
 	// set our cache
-	// if err = e.Cache.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
-	// 	return fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
-	// }
-	// if err = proxyConfig.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
-	// 	return fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
-	// }
+	if err = e.Cache.SetSnapshot(context.Background(), "envoy-instance", snapshot); err != nil {
+		return fmt.Errorf("snapshot error: %+v\n\n%+v", snapshot, err)
+	}
 
 	// return cache to the caller
-	return snapshot, nil
+	return nil
 }
 
 // create resources array to hold all our listener configurations
