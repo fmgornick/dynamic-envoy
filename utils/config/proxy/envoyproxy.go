@@ -60,7 +60,6 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 				RouteConfigName: name + "-routes",
 			},
 		},
-		// NOTE: possible cause of problem
 		HttpFilters: []*hcm.HttpFilter{{
 			Name: wellknown.Router,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
@@ -86,7 +85,6 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 				},
 			},
 		},
-		// NOTE: possible cause of problem
 		FilterChains: []*listener.FilterChain{{
 			Filters: []*listener.Filter{{
 				Name: wellknown.HTTPConnectionManager,
@@ -106,7 +104,8 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_EDS},
 		// use specified load balance policy from universal configuration
 		LbPolicy: cluster.Cluster_LbPolicy(clusterPolicy[policy]),
-		// LoadAssignment:       makeEndpoint(clusterName, UpstreamHost),
+		// not sure if target uses IPv4, IPv6 or both, so i commented this out
+		// lookup family defaults to IPv6 preffered (will do both)
 		// DnsLookupFamily:  cluster.Cluster_V4_ONLY,
 
 		// call endpoint configuration instead of statically inserting endpoint

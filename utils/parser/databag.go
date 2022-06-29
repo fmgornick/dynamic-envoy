@@ -102,10 +102,10 @@ func (bp *BagParser) AddRoutes() error {
 	// now add the "available for both" routes if their more specific route isn't already in the array
 	for name, route := range bp.Config.Routes {
 		if route.Availability == uint8(univcfg.BOTH) {
-			if bp.Config.Routes[name[:len(name)-3]+"-in"] == nil {
+			if bp.Config.Routes[name[:len(name)-2]+"in"] == nil {
 				bp.Config.Listeners["internal"].Routes = append(bp.Config.Listeners["internal"].Routes, name)
 			}
-			if bp.Config.Routes[name[:len(name)-3]+"-ex"] == nil {
+			if bp.Config.Routes[name[:len(name)-2]+"ex"] == nil {
 				bp.Config.Listeners["external"].Routes = append(bp.Config.Listeners["external"].Routes, name)
 			}
 		}
@@ -216,12 +216,24 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 	// compare the two extensions to create the actual extension for the cluster
 	switch aBag == aBack {
 	case true:
-		newName = name + "-" + aBack
+		if name == "" {
+			newName = aBack
+		} else {
+			newName = name + "-" + aBack
+		}
 	case false:
 		if aBag == "ie" {
-			newName = name + "-" + aBack
+			if name == "" {
+				newName = aBack
+			} else {
+				newName = name + "-" + aBack
+			}
 		} else if aBack == "ie" {
-			newName = name + "-" + aBag
+			if name == "" {
+				newName = aBag
+			} else {
+				newName = name + "-" + aBag
+			}
 		} else {
 			return "", fmt.Errorf("bag and backend have conflicting availabilities")
 		}

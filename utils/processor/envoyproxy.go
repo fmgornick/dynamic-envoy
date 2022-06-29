@@ -1,8 +1,6 @@
-// FIX: external proxy configuration getting written over
 package processor
 
 import (
-	// "context"
 	"context"
 	"fmt"
 	"strconv"
@@ -12,8 +10,6 @@ import (
 	types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
-
-	// print "github.com/fmgornick/dynamic-envoy/config/utils/print"
 	prxycfg "github.com/fmgornick/dynamic-envoy/utils/config/proxy"
 	univcfg "github.com/fmgornick/dynamic-envoy/utils/config/universal"
 )

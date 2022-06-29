@@ -14,7 +14,7 @@ const (
 	Create CMR = iota
 	Modify
 	Move
-	Remove
+	Delete
 )
 
 type Message struct {
@@ -73,9 +73,9 @@ func Watch(directory string, change chan<- Message) error {
 						Path:      event.Name,
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					fmt.Printf("removed file: %s\n", event.Name)
+					fmt.Printf("deleted file: %s\n", event.Name)
 					change <- Message{
-						Operation: Remove,
+						Operation: Delete,
 						Path:      event.Name,
 					}
 				}

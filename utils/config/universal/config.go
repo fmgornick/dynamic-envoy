@@ -64,12 +64,12 @@ func (cfg *Config) AddListener(address string, name string, port uint) {
 // also set availability flag based on cluster name
 func (cfg *Config) AddCluster(name string, policy string) {
 	var availability uint8
-	switch name[len(name)-3:] {
-	case "-in":
+	switch name[len(name)-2:] {
+	case "in":
 		availability = INTERNAL
-	case "-ex":
+	case "ex":
 		availability = EXTERNAL
-	case "-ie":
+	case "ie":
 		availability = BOTH
 	default:
 		panic("invalid availability")
@@ -85,12 +85,12 @@ func (cfg *Config) AddCluster(name string, policy string) {
 // also set availability flag based on cluster name
 func (cfg *Config) AddRoute(clusterName string, path string, pathType string) {
 	var availability uint8
-	switch clusterName[len(clusterName)-3:] {
-	case "-in":
+	switch clusterName[len(clusterName)-2:] {
+	case "in":
 		availability = INTERNAL
-	case "-ex":
+	case "ex":
 		availability = EXTERNAL
-	case "-ie":
+	case "ie":
 		availability = BOTH
 	default:
 		panic("invalid availability")
