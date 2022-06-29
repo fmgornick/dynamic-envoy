@@ -89,7 +89,7 @@ func ParseFile(filename string) ([]Bag, error) {
 	// get directory contents
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("ERROR - couldn't read directory: %s\n", err)
+		return nil, fmt.Errorf("ERROR - couldn't read file: %s\n", err)
 	}
 
 	// parse each file into a data bag

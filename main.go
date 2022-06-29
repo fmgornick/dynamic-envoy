@@ -44,6 +44,10 @@ func init() {
 func main() {
 	// call to take in command line input
 	flag.Parse()
+	// remove leading "./"
+	if directory[:2] == "./" {
+		directory = directory[2:]
+	}
 
 	// send existing databag files to envoy
 	err := ProcessChange(watcher.Message{
@@ -113,15 +117,14 @@ func ProcessChange(msg watcher.Message) error {
 		// if it's a directory, then we want to call our operations on all the subdirectories and files
 		// if it's a file, then we want to call ProcessFile, to actually update the config
 		if fileInfo.IsDir() {
-			return filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+			return filepath.Walk(msg.Path, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					fmt.Println(err)
 					return nil
 				}
 
 				// don't want to recursively call ourself, otherwise it's an infinite loop
-				println(path)
-				if path == directory {
+				if path == msg.Path {
 					return nil
 				}
 

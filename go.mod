@@ -19,4 +19,9 @@ require (
 	google.golang.org/protobuf v1.28.0
 )
 
-require github.com/fsnotify/fsnotify v1.5.4
+require (
+	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f
+	github.com/fsnotify/fsnotify v1.5.4
+)
+
+require gopkg.in/fsnotify.v1 v1.4.7 // indirect
