@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strconv"
 
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
@@ -29,7 +28,6 @@ var (
 var change chan watcher.Message     // used to keep track of changes to specified directory
 var envoy *processor.EnvoyProcessor // used to send new configuration to envoy
 
-// TODO: ADD README.MD
 func init() {
 	// initialize environment variables, these can be set by user when running program via setting the flags
 	flag.StringVar(&directory, "dir", "databags/local", "path to folder containing databag files")
@@ -48,7 +46,6 @@ func init() {
 func main() {
 	// call to take in command line input
 	flag.Parse()
-	println("internal port: " + strconv.Itoa(int(iPort)))
 	envoy = processor.NewProcessor(nodeId, iAddr, eAddr, iPort, ePort)
 	// remove leading "./"
 	if directory[:2] == "./" {

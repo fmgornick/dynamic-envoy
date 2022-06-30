@@ -108,7 +108,10 @@ func (e *EnvoyProcessor) Process(msg watcher.Message) error {
 		}
 	}
 	// generate new snapshot from configuration and update the cache
-	return e.setSnapshot()
+	if len(e.Configs) != 0 {
+		return e.setSnapshot()
+	}
+	return nil
 }
 
 // called by ProcessChange, updates config of newly created/modified files
@@ -224,7 +227,6 @@ func makeEndpoints(config *univcfg.Config) []types.Resource {
 
 // turns map of universal configs into snapshot, then sets the cache
 func (e *EnvoyProcessor) setSnapshot() error {
-	// combine all our configs into 1 big one
 	cfg := univcfg.MergeConfigs(e.Configs)
 	// turn our universal configs into envoy proxy configs and add them to snapshot map
 	snapshot, err := cache.NewSnapshot(e.newVersion(),
