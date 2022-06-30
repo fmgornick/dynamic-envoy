@@ -5,6 +5,7 @@ import (
 
 	types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
+	univcfg "github.com/fmgornick/dynamic-envoy/utils/config/universal"
 )
 
 func PrintMap(m map[string][]types.Resource) {
@@ -30,4 +31,9 @@ func PrintMap(m map[string][]types.Resource) {
 func PrettyPrint(data interface{}) {
 	d, _ := json.MarshalIndent(data, "", "  ")
 	println(string(d))
+}
+
+func EnvoyPrint(configs map[string]*univcfg.Config) {
+	cfg := univcfg.MergeConfigs(configs)
+	PrettyPrint(cfg)
 }

@@ -1,9 +1,0 @@
-resources:
-- "@type": type.googleapis.com/envoy.config.route.v3.RouteConfiguration
-  name: internal-routes
-  virtual_hosts:
-  - name: internal-routes
-    domains: ["*"]
-    routes:
-    - match: {path: "/fletcher"}
-      route: {cluster: fletcher-in}

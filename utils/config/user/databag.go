@@ -54,33 +54,6 @@ type RateLimit struct {
 	Field string `json:"field"` // don't needa worry bout rate limit right now
 }
 
-// parses all json files in a directory into a resource object
-func ParseDir(dirname string) ([]Bag, error) {
-	var bags []Bag
-
-	// get directory contents
-	dir, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		return nil, fmt.Errorf("ERROR - couldn't read directory: %s\n", err)
-	}
-
-	// parse each file into a data bag
-	for _, filename := range dir {
-		var bag Bag
-		file, err := ioutil.ReadFile(dirname + "/" + filename.Name())
-		if err != nil {
-			return nil, fmt.Errorf("ERROR - couldn't read file: %s\n", err)
-		}
-		err = json.Unmarshal(file, &bag)
-		if err != nil {
-			return nil, err
-		}
-		bags = append(bags, bag)
-	}
-
-	return bags, nil
-}
-
 // turn json file into a resource object
 func ParseFile(filename string) ([]Bag, error) {
 	var bags []Bag
