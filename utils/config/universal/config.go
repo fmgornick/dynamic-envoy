@@ -13,6 +13,13 @@ type Config struct {
 	Endpoints map[string][]*Endpoint // one endpoint per upstream, clusters can map to 1+ endpoints
 }
 
+type ListenerInfo struct {
+	InternalAddress string // address internal listener listens on
+	ExternalAddress string // address external listener listens on
+	InternalPort    uint   // port internal listener listens on
+	ExternalPort    uint   // port external listener listens on
+}
+
 type Listener struct {
 	Address string   // listen on a specific url
 	Name    string   // either "internal" or "external"
@@ -116,11 +123,12 @@ func (cfg *Config) AddEndpoint(address string, clusterName string, port uint, re
 
 func MergeConfigs(configs map[string]*Config) *Config {
 	bigConfig := NewConfig()
-	bigConfig.AddListener("127.0.0.1", "internal", 7777)
-	bigConfig.AddListener("127.0.0.1", "external", 8888)
 
 	for _, config := range configs {
 		for _, l := range config.Listeners {
+			if bigConfig.Listeners[l.Name] == nil {
+				bigConfig.AddListener(l.Address, l.Name, l.Port)
+			}
 			for _, r := range l.Routes {
 				bigConfig.Listeners[l.Name].Routes = append(bigConfig.Listeners[l.Name].Routes, r)
 			}

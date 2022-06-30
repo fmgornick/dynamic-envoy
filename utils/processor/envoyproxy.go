@@ -22,16 +22,23 @@ import (
 )
 
 type EnvoyProcessor struct {
-	Cache   cache.SnapshotCache        // snapshot config (output for envoyproxy)
-	Configs map[string]*univcfg.Config // map of universal configs
-	Node    string                     // name of node for snapshot
-	version uint                       // keeps track of version number for our envoyproxy config
+	Cache        cache.SnapshotCache        // snapshot config (output for envoyproxy)
+	Configs      map[string]*univcfg.Config // map of universal configs
+	ListenerInfo univcfg.ListenerInfo       // info on what ports and addresses to listen on
+	Node         string                     // name of node for snapshot
+	version      uint                       // keeps track of version number for our envoyproxy config
 }
 
-func NewProcessor(node string) *EnvoyProcessor {
+func NewProcessor(node string, iAddr string, eAddr string, iPort uint, ePort uint) *EnvoyProcessor {
 	return &EnvoyProcessor{
 		Cache:   cache.NewSnapshotCache(false, cache.IDHash{}, nil),
 		Configs: make(map[string]*univcfg.Config),
+		ListenerInfo: univcfg.ListenerInfo{
+			InternalAddress: iAddr,
+			ExternalAddress: eAddr,
+			InternalPort:    iPort,
+			ExternalPort:    ePort,
+		},
 		Node:    node,
 		version: 0,
 	}
@@ -121,7 +128,7 @@ func (e *EnvoyProcessor) processFile(msg watcher.Message) error {
 	if bags, err = usercfg.ParseFile(msg.Path); err != nil {
 		return err
 	}
-	if config, err = parser.Parse(bags); err != nil {
+	if config, err = parser.Parse(bags, e.ListenerInfo); err != nil {
 		return err
 	}
 	e.Configs[msg.Path] = config

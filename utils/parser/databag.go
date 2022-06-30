@@ -12,17 +12,19 @@ import (
 // parser has all the databags and an instance of our resource
 // uses the databags to create the resource
 type BagParser struct {
-	Bags   []usercfg.Bag  // user configuration (input)
-	Config univcfg.Config // universal configuration (output)
+	Bags         []usercfg.Bag  // user configuration (input)
+	Config       univcfg.Config // universal configuration (output)
+	ListenerInfo univcfg.ListenerInfo
 }
 
 // assuming our parser contains a valid array of bags...
 // we create 2 listener configurations and add all the routes, clusters, and endpoints
-func Parse(bags []usercfg.Bag) (*univcfg.Config, error) {
+func Parse(bags []usercfg.Bag, l univcfg.ListenerInfo) (*univcfg.Config, error) {
 	// initialize bag parser variables
 	var bp BagParser
-	bp.Config = *univcfg.NewConfig()
 	bp.Bags = bags
+	bp.Config = *univcfg.NewConfig()
+	bp.ListenerInfo = l
 
 	var err error
 	err = bp.AddListeners()
@@ -47,13 +49,11 @@ func Parse(bags []usercfg.Bag) (*univcfg.Config, error) {
 	return &bp.Config, nil
 }
 
-// NOTE: always returns nil, might want to change up implementation a bit
 // add listeners to listener map
 func (bp *BagParser) AddListeners() error {
-	// hard code listener creation
 	// if given data bags, then it's assumed there will only be 2 listeners
-	bp.Config.AddListener("127.0.0.1", "internal", 7777)
-	bp.Config.AddListener("127.0.0.1", "external", 8888)
+	bp.Config.AddListener(bp.ListenerInfo.InternalAddress, "internal", bp.ListenerInfo.InternalPort)
+	bp.Config.AddListener(bp.ListenerInfo.ExternalAddress, "external", bp.ListenerInfo.ExternalPort)
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strconv"
 
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
@@ -18,6 +19,11 @@ var (
 	directory string
 	nodeId    string
 	xdsPort   uint
+
+	iAddr string
+	eAddr string
+	iPort uint
+	ePort uint
 )
 
 var change chan watcher.Message     // used to keep track of changes to specified directory
@@ -26,18 +32,24 @@ var envoy *processor.EnvoyProcessor // used to send new configuration to envoy
 // TODO: ADD README.MD
 func init() {
 	// initialize environment variables, these can be set by user when running program via setting the flags
-	flag.StringVar(&directory, "directory", "databags/local", "path to folder containing databag files")
-	flag.StringVar(&nodeId, "nodeId", "envoy-instance", "node id of envoy instance")
-	flag.UintVar(&xdsPort, "port", 6969, "port number our xds management server is running on")
+	flag.StringVar(&directory, "dir", "databags/local", "path to folder containing databag files")
+	flag.StringVar(&nodeId, "id", "envoy-instance", "node id of envoy instance")
+	flag.UintVar(&xdsPort, "xp", 6969, "port number our xds management server is running on")
 
-	// initialize directory watcher and processor
+	flag.StringVar(&iAddr, "ia", "127.0.0.1", "address the proxy's internal listener listens on")
+	flag.StringVar(&eAddr, "ea", "127.0.0.1", "address the proxy's external listener listens on")
+	flag.UintVar(&iPort, "ip", 7777, "port number our internal listener listens on")
+	flag.UintVar(&ePort, "ep", 8888, "port number our external listener listens on")
+
+	// initialize directory watcher
 	change = make(chan watcher.Message)
-	envoy = processor.NewProcessor(nodeId)
 }
 
 func main() {
 	// call to take in command line input
 	flag.Parse()
+	println("internal port: " + strconv.Itoa(int(iPort)))
+	envoy = processor.NewProcessor(nodeId, iAddr, eAddr, iPort, ePort)
 	// remove leading "./"
 	if directory[:2] == "./" {
 		directory = directory[2:]
