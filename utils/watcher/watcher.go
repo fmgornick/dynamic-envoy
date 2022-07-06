@@ -8,17 +8,17 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type CMR int
+type CMRD int
 
 const (
-	Create CMR = iota
+	Create CMRD = iota
 	Modify
 	Move
 	Delete
 )
 
 type Message struct {
-	Operation CMR
+	Operation CMRD
 	Path      string
 }
 

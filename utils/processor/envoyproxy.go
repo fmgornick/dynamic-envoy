@@ -74,8 +74,7 @@ func (e *EnvoyProcessor) Process(msg watcher.Message) error {
 		if info.IsDir() {
 			err := filepath.Walk(msg.Path, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
-					fmt.Println(err)
-					return nil
+					return err
 				}
 
 				// don't want to recursively call ourself, otherwise it's an infinite loop
