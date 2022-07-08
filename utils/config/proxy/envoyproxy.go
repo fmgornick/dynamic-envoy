@@ -15,6 +15,7 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	router "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	wellknown "github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
@@ -98,6 +99,9 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 
 // create cluster envoyproxy configuration
 func MakeCluster(name string, policy string) *cluster.Cluster {
+	tlsConfig, _ := anypb.New(&tls.UpstreamTlsContext{
+		CommonTlsContext: &tls.CommonTlsContext{},
+	})
 	return &cluster.Cluster{
 		Name:                 name,
 		ConnectTimeout:       durationpb.New(5 * time.Second),
@@ -126,6 +130,12 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 					},
 				},
 			},
+		},
+		TransportSocket: &core.TransportSocket{
+			ConfigType: &core.TransportSocket_TypedConfig{
+				TypedConfig: tlsConfig,
+			},
+			Name: "envoy.transport_socket.tls",
 		},
 	}
 }

@@ -12,13 +12,8 @@
       "servers": {
         "endpoints": [
           {
-            "address": "127.0.0.1",
-            "port": 1111,
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1",
-            "port": 2222,
+            "address": "172.217.0.174",
+            "port": 443,
             "region": "global"
           }
         ]
