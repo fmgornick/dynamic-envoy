@@ -79,14 +79,12 @@ func main() {
 	for {
 		select {
 		case msg := <-change:
-			// fmt.Printf("processing new change...\n")
 			err := envoy.Process(msg)
 			if err != nil {
 				err = fmt.Errorf("error processing new config: %+v\n", err)
 				panic(err)
 			}
 			prnt.EnvoyPrint(envoy.Configs)
-			// fmt.Printf("changes added!!!\n\n")
 		}
 	}
 }

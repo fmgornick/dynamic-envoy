@@ -205,10 +205,10 @@ func makeRoutes(config *univcfg.Config) []types.Resource {
 // create resources array to hold all our endpoint configurations
 func makeEndpoints(config *univcfg.Config) []types.Resource {
 	var resources []types.Resource
-	var endpoints []*endpoint.LbEndpoint
 
 	for clusterName, edps := range config.Endpoints {
 		// create endpoint array of all the endpoints that a single cluster maps to
+		var endpoints []*endpoint.LbEndpoint
 		for _, e := range edps {
 			endpoints = append(endpoints, prxycfg.MakeEndpoint(e.Address, e.Port, e.Weight))
 		}

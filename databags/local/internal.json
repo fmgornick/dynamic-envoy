@@ -24,8 +24,5 @@
         ]
       }
     }
-  ],
-  "groups": [
-    "CN=APP-API-PlatformEngineer,OU=Application,OU=Groupings,DC=corp,DC=target,DC=com"
   ]
 }
