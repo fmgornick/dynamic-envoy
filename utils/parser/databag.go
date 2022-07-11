@@ -9,6 +9,20 @@ import (
 	usercfg "github.com/fmgornick/dynamic-envoy/utils/config/user"
 )
 
+var schemes map[string]uint = map[string]uint{
+	"ftp":    20,
+	"gopher": 70,
+	"http":   80,
+	"https":  443,
+	"imap":   143,
+	"ldap":   389,
+	"nfs":    2049,
+	"nntp":   119,
+	"pop":    110,
+	"smtp":   25,
+	"telnet": 23,
+}
+
 // parser has all the databags and an instance of our resource
 // uses the databags to create the resource
 type BagParser struct {
@@ -81,13 +95,20 @@ func (bp *BagParser) AddRoutes() error {
 		for _, backend := range bag.Backends {
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get cluster name: %+v", err)
 			}
 			// check if specific path provided, otherwise get path from bag id
+			bagPath := "/" + strings.Replace(bag.Id, "-", "/", -1)
 			if backend.Match.Path.Pattern == "" {
-				bp.Config.AddRoute(clusterName, "/"+strings.Replace(bag.Id, "-", "/", -1), "exact")
+				bp.Config.AddRoute(clusterName, bagPath, "exact")
 			} else {
-				bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, backend.Match.Path.Type)
+				if !strings.HasPrefix(backend.Match.Path.Pattern, bagPath) {
+					return fmt.Errorf("path pattern must start with \"%s\"", bagPath)
+				} else if backend.Match.Path.Type == "" {
+					bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, "exact")
+				} else {
+					bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, backend.Match.Path.Type)
+				}
 			}
 		}
 	}
@@ -138,15 +159,32 @@ func (bp *BagParser) AddEndpoints() error {
 					address = split[0] + ":" + split[1]
 					p, err := strconv.Atoi(split[2])
 					if err != nil {
-						port = 443
+						return fmt.Errorf("invalid port")
 					} else {
 						port = uint(p)
 					}
-				} else if endpoint.Port == 0 {
-					address = endpoint.Address
-					port = 443
+					if _, ok := schemes[split[0]]; !ok {
+						return fmt.Errorf("invalid schema")
+					}
+				} else if len(split) == 2 {
+					if p, ok := schemes[split[0]]; ok {
+						address = endpoint.Address
+						port = p
+					} else {
+						p, err := strconv.Atoi(split[1])
+						if err != nil {
+							return fmt.Errorf("no valid port or scheme")
+						} else {
+							address = split[0]
+							port = uint(p)
+						}
+					}
 				} else {
 					address = endpoint.Address
+					port = 443
+				}
+
+				if endpoint.Port != 0 {
 					port = endpoint.Port
 				}
 				// add endpoints to endpoint map
