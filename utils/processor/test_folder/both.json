@@ -1,0 +1,47 @@
+{
+  "id": "fletcher",
+  "availability": [
+    "internal",
+    "external"
+  ],
+  "backends": [
+    {
+      "availability": [
+        "internal"
+      ],
+      "match": {
+        "path": {
+          "type": "starts_with",
+          "pattern": "/fletcher/3"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 3333,
+            "region": "global"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "path": {
+          "type": "exact",
+          "pattern": "/fletcher/4"
+        }
+      },
+      "servers": {
+        "endpoints": [
+          {
+            "address": "127.0.0.1",
+            "port": 4444,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ]
+}
+

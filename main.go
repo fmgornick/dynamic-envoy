@@ -61,7 +61,8 @@ func main() {
 		err = fmt.Errorf("error processing config: %+v\n", err)
 		panic(err)
 	}
-	prnt.EnvoyPrint(envoy.Configs)
+	snapshot, _ := envoy.Cache.GetSnapshot("envoy-instance")
+	prnt.PrettyPrint(snapshot)
 
 	// watch for file changes in specified directory
 	go func() {

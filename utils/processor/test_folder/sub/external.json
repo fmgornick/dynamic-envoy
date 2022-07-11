@@ -1,0 +1,26 @@
+{
+  "id": "",
+  "availability": [
+    "external"
+  ],
+  "backends": [
+    {
+      "servers": {
+        "endpoints": [
+          {
+            "address": "external.route",
+            "port": 5555,
+            "region": "global"
+          },
+          {
+            "address": "external.route",
+            "port": 6666,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ]
+}
+
+

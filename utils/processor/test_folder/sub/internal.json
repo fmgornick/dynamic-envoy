@@ -1,0 +1,23 @@
+{
+  "id": "",
+  "availability": [
+    "internal",
+    "external"
+  ],
+  "backends": [
+    {
+      "availability": [
+        "internal"
+      ],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "internal.route",
+            "port": 4444,
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ]
+}

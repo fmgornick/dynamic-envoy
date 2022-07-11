@@ -11,7 +11,7 @@
       ],
       "match": {
         "path": {
-          "type": "exact",
+          "type": "starts_with",
           "pattern": "/fletcher/3"
         }
       },

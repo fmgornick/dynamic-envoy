@@ -124,6 +124,9 @@ func (e *EnvoyProcessor) processFile(msg watcher.Message) error {
 	// file changed: delete existing configuration of file, then re-add it
 	// file deleted: covered by Process
 	// file moved:   covered by Process
+	if msg.Operation == watcher.Delete || msg.Operation == watcher.Move {
+		return fmt.Errorf("operation can only be modify or create")
+	}
 	if msg.Operation == watcher.Modify {
 		delete(e.Configs, msg.Path)
 	}
