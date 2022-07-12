@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	endpointv3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
@@ -154,8 +155,10 @@ func makeListeners(config *univcfg.Config) []types.Resource {
 func makeClusters(config *univcfg.Config) []types.Resource {
 	var resources []types.Resource
 
-	for _, c := range config.Clusters {
-		resources = append(resources, prxycfg.MakeCluster(c.Name, c.Policy))
+	for name, cluster := range config.Clusters {
+		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy)
+		c.LoadAssignment = makeEndpoints(config.Endpoints[name])
+		resources = append(resources, c)
 	}
 
 	return resources
@@ -204,25 +207,19 @@ func makeRoutes(config *univcfg.Config) []types.Resource {
 }
 
 // create resources array to hold all our endpoint configurations
-func makeEndpoints(config *univcfg.Config) []types.Resource {
-	var resources []types.Resource
-
-	for clusterName, edps := range config.Endpoints {
-		// create endpoint array of all the endpoints that a single cluster maps to
-		var endpoints []*endpoint.LbEndpoint
-		for _, e := range edps {
-			endpoints = append(endpoints, prxycfg.MakeEndpoint(e.Address, e.Port, e.Weight))
-		}
-		// add this new array of endpoints to our resources array
-		resources = append(resources, &endpoint.ClusterLoadAssignment{
-			ClusterName: clusterName,
-			Endpoints: []*endpoint.LocalityLbEndpoints{{
-				LbEndpoints: endpoints,
-			}},
-		})
+func makeEndpoints(edps []*univcfg.Endpoint) *endpointv3.ClusterLoadAssignment {
+	// create endpoint array of all the endpoints that a single cluster maps to
+	var endpoints []*endpoint.LbEndpoint
+	for _, e := range edps {
+		endpoints = append(endpoints, prxycfg.MakeEndpoint(e.Address, e.Port, e.Weight))
 	}
-
-	return resources
+	// add this new array of endpoints to our resources array
+	return &endpoint.ClusterLoadAssignment{
+		ClusterName: edps[0].ClusterName,
+		Endpoints: []*endpoint.LocalityLbEndpoints{{
+			LbEndpoints: endpoints,
+		}},
+	}
 }
 
 // turns map of universal configs into snapshot, then sets the cache
@@ -237,8 +234,7 @@ func (e *EnvoyProcessor) setSnapshot() error {
 				resource.ClusterType:  nil,
 				resource.RouteType:    nil,
 				resource.EndpointType: nil,
-			},
-		)
+			})
 	} else {
 		cfg := univcfg.MergeConfigs(e.Configs)
 		// turn our universal configs into envoy proxy configs and add them to snapshot map
@@ -247,9 +243,8 @@ func (e *EnvoyProcessor) setSnapshot() error {
 				resource.ListenerType: makeListeners(cfg),
 				resource.ClusterType:  makeClusters(cfg),
 				resource.RouteType:    makeRoutes(cfg),
-				resource.EndpointType: makeEndpoints(cfg),
-			},
-		)
+				// resource.EndpointType: makeEndpoints(cfg),
+			})
 	}
 	if err != nil {
 		return fmt.Errorf("problem generating snapshot: %+v", err)

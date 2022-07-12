@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -148,44 +149,35 @@ func (bp *BagParser) AddEndpoints() error {
 				delete(bp.Config.Clusters, clusterName)
 			}
 			for _, endpoint := range backend.Server.Endpoints {
-				var port uint
-				var address string
 				// check if a port is specified in the url
 				// if there is a route, then assign it to our port variable and remove it from the address string
 				// otherwise, just leave the address as is and assign as 80
-				split := strings.Split(endpoint.Address, ":")
+				var address string
+				var port uint
 
-				if len(split) == 3 {
-					address = split[0] + ":" + split[1]
-					p, err := strconv.Atoi(split[2])
-					if err != nil {
-						return fmt.Errorf("invalid port")
-					} else {
-						port = uint(p)
-					}
-					if _, ok := schemes[split[0]]; !ok {
-						return fmt.Errorf("invalid schema")
-					}
-				} else if len(split) == 2 {
-					if p, ok := schemes[split[0]]; ok {
-						address = endpoint.Address
-						port = p
-					} else {
-						p, err := strconv.Atoi(split[1])
-						if err != nil {
-							return fmt.Errorf("no valid port or scheme")
-						} else {
-							address = split[0]
-							port = uint(p)
-						}
-					}
+				var addr string
+				scheme := strings.Split(endpoint.Address, ":")[0]
+				if _, ok := schemes[scheme]; ok {
+					addr = endpoint.Address
 				} else {
-					address = endpoint.Address
-					port = 80
+					addr = "http://" + endpoint.Address
 				}
 
-				if endpoint.Port != 0 {
-					port = endpoint.Port
+				u, err := url.Parse(addr)
+				if err != nil {
+					return fmt.Errorf("error parsing url: %+v", err)
+				}
+				address = u.Hostname()
+				portString := u.Port()
+				if portString == "" {
+					if endpoint.Port == 0 {
+						port = uint(schemes[u.Scheme])
+					} else {
+						port = endpoint.Port
+					}
+				} else {
+					p, _ := strconv.Atoi(portString)
+					port = uint(p)
 				}
 				// add endpoints to endpoint map
 				bp.Config.AddEndpoint(address, clusterName, port, endpoint.Region, endpoint.Weight)

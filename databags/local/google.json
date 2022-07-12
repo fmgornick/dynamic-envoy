@@ -1,22 +1,15 @@
 {
-  "id": "",
+  "id": "google",
   "availability": [
     "internal",
     "external"
   ],
   "backends": [
     {
-      "availability": [
-        "internal"
-      ],
       "servers": {
         "endpoints": [
           {
-            "address": "127.0.0.1:2222",
-            "region": "global"
-          },
-          {
-            "address": "127.0.0.1:1111",
+            "address": "google.com",
             "region": "global"
           }
         ]
@@ -24,3 +17,4 @@
     }
   ]
 }
+

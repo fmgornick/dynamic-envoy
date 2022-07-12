@@ -99,34 +99,13 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 // create cluster envoyproxy configuration
 func MakeCluster(name string, policy string) *cluster.Cluster {
 	return &cluster.Cluster{
-		Name:                 name,
-		ConnectTimeout:       durationpb.New(5 * time.Second),
-		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_EDS},
-		// use specified load balance policy from universal configuration
-		LbPolicy: cluster.Cluster_LbPolicy(clusterPolicy[policy]),
-		// not sure if target uses IPv4, IPv6 or both, so i commented this out
-		// lookup family defaults to IPv6 preffered (will do both)
-		// DnsLookupFamily:  cluster.Cluster_V4_ONLY,
-
-		// call endpoint configuration instead of statically inserting endpoint
-		// load assignment config
-		EdsClusterConfig: &cluster.Cluster_EdsClusterConfig{
-			EdsConfig: &core.ConfigSource{
-				ResourceApiVersion: resource.DefaultAPIVersion,
-				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
-					ApiConfigSource: &core.ApiConfigSource{
-						TransportApiVersion:       resource.DefaultAPIVersion,
-						ApiType:                   core.ApiConfigSource_GRPC,
-						SetNodeOnFirstMessageOnly: true,
-						GrpcServices: []*core.GrpcService{{
-							TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-								EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: "xds_cluster"},
-							},
-						}},
-					},
-				},
-			},
-		},
+		Name:           name,
+		ConnectTimeout: durationpb.New(5 * time.Second),
+		// strict DNS is the only one that does multiple endpoints + ips or domains
+		// logical DNS only does 1 enpoint
+		// eds config only does IPs
+		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
+		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
 }
 
@@ -176,44 +155,31 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 	// give the endpoints an assigned weight only if weight is specified
 	// in the user configuration
-	if weight == 0 {
-		return &endpoint.LbEndpoint{
-			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-				Endpoint: &endpoint.Endpoint{
-					Address: &core.Address{
-						Address: &core.Address_SocketAddress{
-							SocketAddress: &core.SocketAddress{
-								Protocol: core.SocketAddress_TCP,
-								Address:  address,
-								PortSpecifier: &core.SocketAddress_PortValue{
-									PortValue: uint32(port),
-								},
-							},
+	hid := &endpoint.LbEndpoint_Endpoint{
+		Endpoint: &endpoint.Endpoint{
+			Address: &core.Address{
+				Address: &core.Address_SocketAddress{
+					SocketAddress: &core.SocketAddress{
+						Protocol: core.SocketAddress_TCP,
+						Address:  address,
+						PortSpecifier: &core.SocketAddress_PortValue{
+							PortValue: uint32(port),
 						},
 					},
 				},
 			},
+		},
+	}
+	if weight == 0 {
+		return &endpoint.LbEndpoint{
+			HostIdentifier: hid,
 		}
 	} else {
 		return &endpoint.LbEndpoint{
 			LoadBalancingWeight: &wpb.UInt32Value{
 				Value: uint32(weight),
 			},
-			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-				Endpoint: &endpoint.Endpoint{
-					Address: &core.Address{
-						Address: &core.Address_SocketAddress{
-							SocketAddress: &core.SocketAddress{
-								Protocol: core.SocketAddress_TCP,
-								Address:  address,
-								PortSpecifier: &core.SocketAddress_PortValue{
-									PortValue: uint32(port),
-								},
-							},
-						},
-					},
-				},
-			},
+			HostIdentifier: hid,
 		}
 	}
 }
