@@ -200,10 +200,10 @@ func TestAddEndpoints(t *testing.T) {
 	assert.Equal(t, "external.address1", config.Endpoints["ex"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "external.address2", config.Endpoints["ex"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(3333), config.Endpoints["ex"][0].Port, "port should be same (or retrieved from scheme)")
-	assert.Equal(t, uint(443), config.Endpoints["ex"][1].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(80), config.Endpoints["ex"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "http://both.address1", config.Endpoints["ie"][0].Address, "address should be same (plus ports stripped)")
-	assert.Equal(t, "https://both.address2", config.Endpoints["ie"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "both.address1", config.Endpoints["ie"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "both.address2", config.Endpoints["ie"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(80), config.Endpoints["ie"][0].Port, "port should be same (or retrieved from scheme)")
 	assert.Equal(t, uint(443), config.Endpoints["ie"][1].Port, "port should be same (or retrieved from scheme)")
 
@@ -215,10 +215,10 @@ func TestAddEndpoints(t *testing.T) {
 	assert.Equal(t, "external.address1", config.Endpoints["bag-ex"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "external.address2", config.Endpoints["bag-ex"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(3333), config.Endpoints["bag-ex"][0].Port, "port should be same (or retrieved from scheme)")
-	assert.Equal(t, uint(443), config.Endpoints["bag-ex"][1].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(80), config.Endpoints["bag-ex"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "http://both.address1", config.Endpoints["bag-ie"][0].Address, "address should be same (plus ports stripped)")
-	assert.Equal(t, "https://both.address2", config.Endpoints["bag-ie"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "both.address1", config.Endpoints["bag-ie"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "both.address2", config.Endpoints["bag-ie"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(80), config.Endpoints["bag-ie"][0].Port, "port should be same (or retrieved from scheme)")
 	assert.Equal(t, uint(443), config.Endpoints["bag-ie"][1].Port, "port should be same (or retrieved from scheme)")
 
@@ -270,8 +270,8 @@ func TestAddEndpoints(t *testing.T) {
 	err1 := badParser1.AddEndpoints()
 	err2 := badParser2.AddEndpoints()
 
-	assert.EqualError(t, err1, "invalid schema")
-	assert.EqualError(t, err2, "invalid port")
+	assert.EqualError(t, err1, "invalid schema: htp")
+	assert.EqualError(t, err2, "error parsing url: parse \"http://invalid.address2:port\": invalid port \":port\" after host")
 }
 
 func TestGetClusterName(t *testing.T) {

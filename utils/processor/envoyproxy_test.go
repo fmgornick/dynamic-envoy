@@ -1,12 +1,12 @@
 package processor
 
 import (
-	"regexp"
+	// "regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	// endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	univcfg "github.com/fmgornick/dynamic-envoy/utils/config/universal"
 	watcher "github.com/fmgornick/dynamic-envoy/utils/watcher"
@@ -109,33 +109,33 @@ func TestMakeRoutes(t *testing.T) {
 	assert.Equal(t, 1, len(internalRoutes.VirtualHosts[0].Routes), "should only contain 1 internal route")
 }
 
-func TestMakeEndpoints(t *testing.T) {
-	config := univcfg.NewConfig()
-	config.AddEndpoint("address1", "cluster1", 1111, "", 1)
-	config.AddEndpoint("address2", "cluster2", 2222, "", 2)
-	config.AddEndpoint("address3", "cluster1", 3333, "", 3)
+// func TestMakeEndpoints(t *testing.T) {
+// 	config := univcfg.NewConfig()
+// 	config.AddEndpoint("address1", "cluster1", 1111, "", 1)
+// 	config.AddEndpoint("address2", "cluster2", 2222, "", 2)
+// 	config.AddEndpoint("address3", "cluster1", 3333, "", 3)
 
-	resources := makeEndpoints(config)
+// 	resources := makeEndpoints(config)
 
-	cluster1 := resources[0].(*endpoint.ClusterLoadAssignment)
-	cluster2 := resources[1].(*endpoint.ClusterLoadAssignment)
-	if cluster1.ClusterName != "cluster1" {
-		cluster1, cluster2 = cluster2, cluster1
-	}
+// 	cluster1 := resources[0].(*endpoint.ClusterLoadAssignment)
+// 	cluster2 := resources[1].(*endpoint.ClusterLoadAssignment)
+// 	if cluster1.ClusterName != "cluster1" {
+// 		cluster1, cluster2 = cluster2, cluster1
+// 	}
 
-	s := regexp.MustCompile(`\s+`)
-	assert.Equal(t, 2, len(cluster1.Endpoints[0].LbEndpoints), "should only have 2 lb enpoints")
-	assert.Equal(t, "cluster1", cluster1.ClusterName, "cluster name should match")
-	assert.Equal(t, "address:\"address1\" port_value:1111",
-		s.ReplaceAllString(cluster1.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().String(), " "),
-		"should have matching address and port")
-	assert.Equal(t, "address:\"address3\" port_value:3333",
-		s.ReplaceAllString(cluster1.Endpoints[0].LbEndpoints[1].GetEndpoint().Address.GetSocketAddress().String(), " "),
-		"should have matching address and port")
+// 	s := regexp.MustCompile(`\s+`)
+// 	assert.Equal(t, 2, len(cluster1.Endpoints[0].LbEndpoints), "should only have 2 lb enpoints")
+// 	assert.Equal(t, "cluster1", cluster1.ClusterName, "cluster name should match")
+// 	assert.Equal(t, "address:\"address1\" port_value:1111",
+// 		s.ReplaceAllString(cluster1.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().String(), " "),
+// 		"should have matching address and port")
+// 	assert.Equal(t, "address:\"address3\" port_value:3333",
+// 		s.ReplaceAllString(cluster1.Endpoints[0].LbEndpoints[1].GetEndpoint().Address.GetSocketAddress().String(), " "),
+// 		"should have matching address and port")
 
-	assert.Equal(t, 1, len(cluster2.Endpoints[0].LbEndpoints), "should only have 1 lb enpoint")
-	assert.Equal(t, "cluster2", cluster2.ClusterName, "cluster name should match")
-	assert.Equal(t, "address:\"address2\" port_value:2222",
-		s.ReplaceAllString(cluster2.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().String(), " "),
-		"should have matching address and port")
-}
+// 	assert.Equal(t, 1, len(cluster2.Endpoints[0].LbEndpoints), "should only have 1 lb enpoint")
+// 	assert.Equal(t, "cluster2", cluster2.ClusterName, "cluster name should match")
+// 	assert.Equal(t, "address:\"address2\" port_value:2222",
+// 		s.ReplaceAllString(cluster2.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().String(), " "),
+// 		"should have matching address and port")
+// }
