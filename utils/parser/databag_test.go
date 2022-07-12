@@ -72,15 +72,31 @@ var internalBagWithId usercfg.Bag = usercfg.Bag{
 	Id:           "internal-bag",
 }
 
+var lconfig univcfg.ListenerInfo = univcfg.ListenerInfo{
+	InternalAddress: "internal.address",
+	ExternalAddress: "external.address",
+	InternalPort:    1111,
+	ExternalPort:    2222,
+}
 var parser BagParser = BagParser{
-	Bags:   []usercfg.Bag{bagWithoutId, bagWithId},
-	Config: *univcfg.NewConfig(),
-	ListenerInfo: univcfg.ListenerInfo{
-		InternalAddress: "internal.address",
-		ExternalAddress: "external.address",
-		InternalPort:    1111,
-		ExternalPort:    2222,
-	},
+	Bags:         []usercfg.Bag{bagWithoutId, bagWithId},
+	Config:       *univcfg.NewConfig(),
+	ListenerInfo: lconfig,
+}
+
+func TestParse(t *testing.T) {
+	var bags []usercfg.Bag = []usercfg.Bag{bagWithoutId, bagWithId}
+	config, err := Parse(bags, lconfig)
+
+	assert.NoError(t, err, "Parse should not produce an error")
+
+	assert.Equal(t, "internal.address", config.Listeners["internal"].Address, "listener address should match")
+	assert.Equal(t, "external.address", config.Listeners["external"].Address, "listener address should match")
+	assert.Equal(t, uint(1111), config.Listeners["internal"].Port, "listener port should match")
+	assert.Equal(t, uint(2222), config.Listeners["external"].Port, "listener port should match")
+
+	assert.Equal(t, uint8(1), config.Clusters["in"].Availability, "in cluster should be internal")
+	assert.Equal(t, uint8(2), config.Clusters["ex"].Availability, "ex cluster should be external")
 }
 
 func TestAddRoutes(t *testing.T) {
@@ -133,13 +149,8 @@ func TestAddRoutes(t *testing.T) {
 			},
 			Id: "bag-path",
 		}},
-		Config: *univcfg.NewConfig(),
-		ListenerInfo: univcfg.ListenerInfo{
-			InternalAddress: "internal.address",
-			ExternalAddress: "external.address",
-			InternalPort:    1111,
-			ExternalPort:    2222,
-		},
+		Config:       *univcfg.NewConfig(),
+		ListenerInfo: lconfig,
 	}
 	p.AddListeners()
 	err1 := p.AddRoutes()
@@ -147,13 +158,13 @@ func TestAddRoutes(t *testing.T) {
 
 	config := p.Config
 
-	assert.Equal(t, "starts_with", config.Routes["bag-path-internal-route-in"].Type)
-	assert.Equal(t, "exact", config.Routes["bag-path-ex"].Type)
-	assert.Equal(t, "exact", config.Routes["bag-path-route-ie"].Type)
+	assert.Equal(t, "starts_with", config.Routes["bag-path-internal-route-in"].Type, "route should check prefix")
+	assert.Equal(t, "exact", config.Routes["bag-path-ex"].Type, "route should check whole path")
+	assert.Equal(t, "exact", config.Routes["bag-path-route-ie"].Type, "route should check whole path")
 
-	assert.Equal(t, "/bag/path/internal/route", config.Routes["bag-path-internal-route-in"].Path)
-	assert.Equal(t, "/bag/path", config.Routes["bag-path-ex"].Path)
-	assert.Equal(t, "/bag/path/route", config.Routes["bag-path-route-ie"].Path)
+	assert.Equal(t, "/bag/path/internal/route", config.Routes["bag-path-internal-route-in"].Path, "path should match")
+	assert.Equal(t, "/bag/path", config.Routes["bag-path-ex"].Path, "path should match")
+	assert.Equal(t, "/bag/path/route", config.Routes["bag-path-route-ie"].Path, "path should match")
 
 	p.Bags[0].Backends = append(p.Bags[0].Backends, usercfg.Backend{
 		Availability: []string{"internal"},
@@ -172,7 +183,7 @@ func TestAddRoutes(t *testing.T) {
 	})
 
 	err2 := p.AddRoutes()
-	assert.EqualError(t, err2, "path pattern must start with \"/bag/path\"")
+	assert.EqualError(t, err2, "path pattern must start with \"/bag/path\"", "if pattern doesn't have id in start, should return error")
 }
 
 func TestAddEndpoints(t *testing.T) {
@@ -181,35 +192,35 @@ func TestAddEndpoints(t *testing.T) {
 
 	config := parser.Config
 
-	assert.Equal(t, "internal.address1", config.Endpoints["in"][0].Address)
-	assert.Equal(t, "internal.address2", config.Endpoints["in"][1].Address)
-	assert.Equal(t, uint(1111), config.Endpoints["in"][0].Port)
-	assert.Equal(t, uint(2222), config.Endpoints["in"][1].Port)
+	assert.Equal(t, "internal.address1", config.Endpoints["in"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "internal.address2", config.Endpoints["in"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(1111), config.Endpoints["in"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(2222), config.Endpoints["in"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "external.address1", config.Endpoints["ex"][0].Address)
-	assert.Equal(t, "external.address2", config.Endpoints["ex"][1].Address)
-	assert.Equal(t, uint(3333), config.Endpoints["ex"][0].Port)
-	assert.Equal(t, uint(443), config.Endpoints["ex"][1].Port)
+	assert.Equal(t, "external.address1", config.Endpoints["ex"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "external.address2", config.Endpoints["ex"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(3333), config.Endpoints["ex"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["ex"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "http://both.address1", config.Endpoints["ie"][0].Address)
-	assert.Equal(t, "https://both.address2", config.Endpoints["ie"][1].Address)
-	assert.Equal(t, uint(80), config.Endpoints["ie"][0].Port)
-	assert.Equal(t, uint(443), config.Endpoints["ie"][1].Port)
+	assert.Equal(t, "http://both.address1", config.Endpoints["ie"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "https://both.address2", config.Endpoints["ie"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(80), config.Endpoints["ie"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["ie"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "internal.address1", config.Endpoints["bag-in"][0].Address)
-	assert.Equal(t, "internal.address2", config.Endpoints["bag-in"][1].Address)
-	assert.Equal(t, uint(1111), config.Endpoints["bag-in"][0].Port)
-	assert.Equal(t, uint(2222), config.Endpoints["bag-in"][1].Port)
+	assert.Equal(t, "internal.address1", config.Endpoints["bag-in"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "internal.address2", config.Endpoints["bag-in"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(1111), config.Endpoints["bag-in"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(2222), config.Endpoints["bag-in"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "external.address1", config.Endpoints["bag-ex"][0].Address)
-	assert.Equal(t, "external.address2", config.Endpoints["bag-ex"][1].Address)
-	assert.Equal(t, uint(3333), config.Endpoints["bag-ex"][0].Port)
-	assert.Equal(t, uint(443), config.Endpoints["bag-ex"][1].Port)
+	assert.Equal(t, "external.address1", config.Endpoints["bag-ex"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "external.address2", config.Endpoints["bag-ex"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(3333), config.Endpoints["bag-ex"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["bag-ex"][1].Port, "port should be same (or retrieved from scheme)")
 
-	assert.Equal(t, "http://both.address1", config.Endpoints["bag-ie"][0].Address)
-	assert.Equal(t, "https://both.address2", config.Endpoints["bag-ie"][1].Address)
-	assert.Equal(t, uint(80), config.Endpoints["bag-ie"][0].Port)
-	assert.Equal(t, uint(443), config.Endpoints["bag-ie"][1].Port)
+	assert.Equal(t, "http://both.address1", config.Endpoints["bag-ie"][0].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, "https://both.address2", config.Endpoints["bag-ie"][1].Address, "address should be same (plus ports stripped)")
+	assert.Equal(t, uint(80), config.Endpoints["bag-ie"][0].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["bag-ie"][1].Port, "port should be same (or retrieved from scheme)")
 
 	badBackend1 := []usercfg.Backend{{
 		Availability: []string{"internal"},
@@ -246,24 +257,14 @@ func TestAddEndpoints(t *testing.T) {
 	}}
 
 	badParser1 := BagParser{
-		Bags:   badBag1,
-		Config: *univcfg.NewConfig(),
-		ListenerInfo: univcfg.ListenerInfo{
-			InternalAddress: "internal.address",
-			ExternalAddress: "external.address",
-			InternalPort:    1111,
-			ExternalPort:    2222,
-		},
+		Bags:         badBag1,
+		Config:       *univcfg.NewConfig(),
+		ListenerInfo: lconfig,
 	}
 	badParser2 := BagParser{
-		Bags:   badBag2,
-		Config: *univcfg.NewConfig(),
-		ListenerInfo: univcfg.ListenerInfo{
-			InternalAddress: "internal.address",
-			ExternalAddress: "external.address",
-			InternalPort:    1111,
-			ExternalPort:    2222,
-		},
+		Bags:         badBag2,
+		Config:       *univcfg.NewConfig(),
+		ListenerInfo: lconfig,
 	}
 
 	err1 := badParser1.AddEndpoints()
@@ -309,36 +310,36 @@ func TestGetClusterName(t *testing.T) {
 	res15, err15 := getClusterName(internalBagWithId, new_backends[2])
 	res16, err16 := getClusterName(internalBagWithId, new_backends[3])
 
-	assert.Equal(t, "in", res1)
-	assert.NoError(t, err1)
-	assert.Equal(t, "ex", res2)
-	assert.NoError(t, err2)
-	assert.Equal(t, "ie", res3)
-	assert.NoError(t, err3)
-	assert.Equal(t, "", res4)
-	assert.EqualError(t, err4, "invalid element in backend availability array")
-	assert.Equal(t, "in", res5)
-	assert.NoError(t, err5)
-	assert.Equal(t, "", res6)
-	assert.EqualError(t, err6, "bag and backend have conflicting availabilities")
-	assert.Equal(t, "in", res7)
-	assert.NoError(t, err7)
-	assert.Equal(t, "", res8)
-	assert.EqualError(t, err8, "invalid element in backend availability array")
-	assert.Equal(t, "bag-in", res9)
-	assert.NoError(t, err9)
-	assert.Equal(t, "bag-ex", res10)
-	assert.NoError(t, err10)
-	assert.Equal(t, "bag-ie", res11)
-	assert.NoError(t, err11)
-	assert.Equal(t, "", res12)
-	assert.EqualError(t, err12, "invalid element in backend availability array")
-	assert.Equal(t, "internal-bag-in", res13)
-	assert.NoError(t, err13)
-	assert.Equal(t, "", res14)
-	assert.EqualError(t, err14, "bag and backend have conflicting availabilities")
-	assert.Equal(t, "internal-bag-in", res15)
-	assert.NoError(t, err15)
-	assert.Equal(t, "", res16)
-	assert.EqualError(t, err16, "invalid element in backend availability array")
+	assert.Equal(t, "in", res1, "should only be in/ex/ie if no bag id")
+	assert.NoError(t, err1, "should not produce an error")
+	assert.Equal(t, "ex", res2, "should only be in/ex/ie if no bag id")
+	assert.NoError(t, err2, "should not produce an error")
+	assert.Equal(t, "ie", res3, "should only be in/ex/ie if no bag id")
+	assert.NoError(t, err3, "should not produce an error")
+	assert.Equal(t, "", res4, "nothing returned because it should produce an error")
+	assert.EqualError(t, err4, "invalid element in backend availability array", "should fail because array has invalid value")
+	assert.Equal(t, "in", res5, "should only be in/ex/ie if no bag id")
+	assert.NoError(t, err5, "should not produce an error")
+	assert.Equal(t, "", res6, "nothing returned because it should produce an error")
+	assert.EqualError(t, err6, "bag and backend have conflicting availabilities", "should fail because availabilities don't match")
+	assert.Equal(t, "in", res7, "should only be in/ex/ie if no bag id")
+	assert.NoError(t, err7, "should not produce an error")
+	assert.Equal(t, "", res8, "nothing returned because it should produce an error")
+	assert.EqualError(t, err8, "invalid element in backend availability array", "should fail because array has invalid value")
+	assert.Equal(t, "bag-in", res9, "should have bag prefix + availability extension")
+	assert.NoError(t, err9, "should not produce an error")
+	assert.Equal(t, "bag-ex", res10, "should have bag prefix + availability extension")
+	assert.NoError(t, err10, "should not produce an error")
+	assert.Equal(t, "bag-ie", res11, "should have bag prefix + availability extension")
+	assert.NoError(t, err11, "should not produce an error")
+	assert.Equal(t, "", res12, "nothing returned because it should produce an error")
+	assert.EqualError(t, err12, "invalid element in backend availability array", "should fail because array has invalid value")
+	assert.Equal(t, "internal-bag-in", res13, "should have internal-bag prefix + availability extension")
+	assert.NoError(t, err13, "should not produce an error")
+	assert.Equal(t, "", res14, "nothing returned because it should produce an error")
+	assert.EqualError(t, err14, "bag and backend have conflicting availabilities", "should fail because availabilities don't match")
+	assert.Equal(t, "internal-bag-in", res15, "should have internal-bag prefix + availability extension")
+	assert.NoError(t, err15, "should not produce an error")
+	assert.Equal(t, "", res16, "nothing returned because it should produce an error")
+	assert.EqualError(t, err16, "invalid element in backend availability array", "should fail because array has invalid value")
 }
