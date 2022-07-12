@@ -108,10 +108,7 @@ func (e *EnvoyProcessor) Process(msg watcher.Message) error {
 		}
 	}
 	// generate new snapshot from configuration and update the cache
-	if len(e.Configs) != 0 {
-		return e.setSnapshot()
-	}
-	return nil
+	return e.setSnapshot()
 }
 
 // called by ProcessChange, updates config of newly created/modified files
@@ -230,16 +227,30 @@ func makeEndpoints(config *univcfg.Config) []types.Resource {
 
 // turns map of universal configs into snapshot, then sets the cache
 func (e *EnvoyProcessor) setSnapshot() error {
-	cfg := univcfg.MergeConfigs(e.Configs)
-	// turn our universal configs into envoy proxy configs and add them to snapshot map
-	snapshot, err := cache.NewSnapshot(e.newVersion(),
-		map[resource.Type][]types.Resource{
-			resource.ListenerType: makeListeners(cfg),
-			resource.ClusterType:  makeClusters(cfg),
-			resource.RouteType:    makeRoutes(cfg),
-			resource.EndpointType: makeEndpoints(cfg),
-		},
-	)
+	var snapshot *cache.Snapshot
+	var err error
+
+	if len(e.Configs) == 0 {
+		snapshot, err = cache.NewSnapshot(e.newVersion(),
+			map[resource.Type][]types.Resource{
+				resource.ListenerType: nil,
+				resource.ClusterType:  nil,
+				resource.RouteType:    nil,
+				resource.EndpointType: nil,
+			},
+		)
+	} else {
+		cfg := univcfg.MergeConfigs(e.Configs)
+		// turn our universal configs into envoy proxy configs and add them to snapshot map
+		snapshot, err = cache.NewSnapshot(e.newVersion(),
+			map[resource.Type][]types.Resource{
+				resource.ListenerType: makeListeners(cfg),
+				resource.ClusterType:  makeClusters(cfg),
+				resource.RouteType:    makeRoutes(cfg),
+				resource.EndpointType: makeEndpoints(cfg),
+			},
+		)
+	}
 	if err != nil {
 		return fmt.Errorf("problem generating snapshot: %+v", err)
 	}
