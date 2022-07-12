@@ -152,7 +152,7 @@ func (bp *BagParser) AddEndpoints() error {
 				var address string
 				// check if a port is specified in the url
 				// if there is a route, then assign it to our port variable and remove it from the address string
-				// otherwise, just leave the address as is and assign as 443
+				// otherwise, just leave the address as is and assign as 80
 				split := strings.Split(endpoint.Address, ":")
 
 				if len(split) == 3 {
@@ -181,7 +181,7 @@ func (bp *BagParser) AddEndpoints() error {
 					}
 				} else {
 					address = endpoint.Address
-					port = 443
+					port = 80
 				}
 
 				if endpoint.Port != 0 {

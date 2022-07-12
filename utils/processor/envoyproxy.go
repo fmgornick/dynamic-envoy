@@ -52,7 +52,8 @@ func (e *EnvoyProcessor) Process(msg watcher.Message) error {
 	// file deleted: delete corresponding config in map
 	// file moved:   delete corresponding config in map
 	if msg.Operation == watcher.Move || msg.Operation == watcher.Delete {
-		if e.Configs[msg.Path] != nil {
+		if _, ok := e.Configs[msg.Path]; ok {
+			println("penis")
 			delete(e.Configs, msg.Path)
 		} else {
 			// if it's a directory then delete every key corresponding to it's elements
