@@ -105,7 +105,16 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 		// logical DNS only does 1 enpoint
 		// eds config only does IPs
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
-		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
+		// LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
+		//   TypedExtensionProtocolOptions: map[string]*anypb.Any{
+
+		//   },
+		// HttpProtocolOptions: &core.Http1ProtocolOptions{
+		// 	AllowAbsoluteUrl: wpb.Bool(true),
+		// },
+		// Http2ProtocolOptions: &core.Http2ProtocolOptions{
+		// 	AllowConnect: true,
+		// },
 	}
 }
 
@@ -113,6 +122,17 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 func MakeRoute(clusterName string, pathPattern string, pathType string) *route.Route {
 	// if we only care about the start of the path then we use the prefix match
 	// if we care about the whole path then we use the path match
+	action := &route.Route_Route{
+		Route: &route.RouteAction{
+			ClusterSpecifier: &route.RouteAction_Cluster{
+				Cluster: clusterName,
+			},
+			PrefixRewrite: "/",
+			HostRewriteSpecifier: &route.RouteAction_AutoHostRewrite{
+				AutoHostRewrite: wpb.Bool(true),
+			},
+		},
+	}
 	switch pathType {
 	case "starts_with":
 		return &route.Route{
@@ -122,13 +142,7 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 					Prefix: pathPattern,
 				},
 			},
-			Action: &route.Route_Route{
-				Route: &route.RouteAction{
-					ClusterSpecifier: &route.RouteAction_Cluster{
-						Cluster: clusterName,
-					},
-				},
-			},
+			Action: action,
 		}
 	case "exact":
 		return &route.Route{
@@ -138,13 +152,7 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 					Path: pathPattern,
 				},
 			},
-			Action: &route.Route_Route{
-				Route: &route.RouteAction{
-					ClusterSpecifier: &route.RouteAction_Cluster{
-						Cluster: clusterName,
-					},
-				},
-			},
+			Action: action,
 		}
 	default:
 		panic(fmt.Errorf("invalid path type"))
