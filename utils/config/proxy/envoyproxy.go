@@ -105,16 +105,7 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 		// logical DNS only does 1 enpoint
 		// eds config only does IPs
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
-		// LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
-		//   TypedExtensionProtocolOptions: map[string]*anypb.Any{
-
-		//   },
-		// HttpProtocolOptions: &core.Http1ProtocolOptions{
-		// 	AllowAbsoluteUrl: wpb.Bool(true),
-		// },
-		// Http2ProtocolOptions: &core.Http2ProtocolOptions{
-		// 	AllowConnect: true,
-		// },
+		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
 }
 

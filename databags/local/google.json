@@ -9,7 +9,7 @@
       "servers": {
         "endpoints": [
           {
-            "address": "google.com",
+            "address": "https://google.com",
             "region": "global"
           }
         ]
