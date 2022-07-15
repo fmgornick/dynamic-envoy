@@ -151,7 +151,7 @@ func MakeHTTPListener(address string, name string, port uint) *listener.Listener
 }
 
 // create cluster envoyproxy configuration
-func MakeCluster(name string, policy string, useTLS bool) *cluster.Cluster {
+func MakeCluster(name string, policy string, https bool) *cluster.Cluster {
 	cluster := &cluster.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(5 * time.Second),
@@ -161,7 +161,7 @@ func MakeCluster(name string, policy string, useTLS bool) *cluster.Cluster {
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
 		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
-	if useTLS {
+	if https {
 		cluster.TransportSocket = transportSocket("upstream")
 	}
 	return cluster
@@ -246,24 +246,15 @@ func transportSocket(context string) *core.TransportSocket {
 		TlsCertificates: []*tls.TlsCertificate{{
 			CertificateChain: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "/etc/ssl/certs/cert.pem",
+					Filename: "/etc/ssl/certs/localhost.crt",
 				},
 			},
 			PrivateKey: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "/etc/ssl/certs/key.pem",
+					Filename: "/etc/ssl/certs/localhost.key",
 				},
 			},
 		}},
-		ValidationContextType: &tls.CommonTlsContext_ValidationContext{
-			ValidationContext: &tls.CertificateValidationContext{
-				TrustedCa: &core.DataSource{
-					Specifier: &core.DataSource_Filename{
-						Filename: "/etc/ssl/cert.pem",
-					},
-				},
-			},
-		},
 	}
 
 	var ctx *anypb.Any

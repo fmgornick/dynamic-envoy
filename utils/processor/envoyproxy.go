@@ -145,7 +145,7 @@ func makeListeners(config *univcfg.Config) []types.Resource {
 
 	for _, l := range config.Listeners {
 		resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port))
-		resources = append(resources, prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port))
+		// resources = append(resources, prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port))
 	}
 
 	return resources
@@ -153,16 +153,18 @@ func makeListeners(config *univcfg.Config) []types.Resource {
 
 // create resources array to hold all our cluster configurations
 func makeClusters(config *univcfg.Config) []types.Resource {
-	var useTLS bool = true
+	var https bool
 	var resources []types.Resource
 
 	for name, cluster := range config.Clusters {
+		https = true
 		for _, endpoint := range config.Endpoints[name] {
+			println(endpoint.Port)
 			if endpoint.Port != uint(443) {
-				useTLS = false
+				https = false
 			}
 		}
-		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, useTLS)
+		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, https)
 		c.LoadAssignment = makeEndpoints(config.Endpoints[name])
 		resources = append(resources, c)
 	}

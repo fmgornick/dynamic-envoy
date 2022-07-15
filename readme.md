@@ -18,7 +18,7 @@ You can see examples of how this application takes databag input in the form of 
 
 ## quick start
 
-If you want to see a working example of this application, you can use our provided [example server](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/server/server.go) and [databags](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/databags) like so...
+If you want to see a working example of this application, you can use our provided [example server](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/server/server.go) and [databags](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/databags).  To run it, you should first generate a certificate on the address you'd like to listen on for routing to HTTPS websites.  You can see how to do that [here](#ssl).  Once that's set, you can run this program like so...
 
 1. clone this repository:
 ```sh
@@ -32,7 +32,7 @@ cd dynamic-envoy/server
 
 3. run server in background (should run on localhost, ports 1111, 2222, 3333, and 4444):
 ```sh
-go run server.go &
+go run server.go&
 ```
 
 4. navigate to envoy bootstrap configuration directory:
@@ -58,6 +58,33 @@ go build main.go
 8. you can move / delete / add files to the directory the application is watching and see as the envoy configuration updates real time.
 
 
+## <a name="ssl"></a> generating SSL certificate for HTTPS connection
+
+If you want to be able to route to secure addresses using https, then you need to run the following commands to create a certificate + key.
+When running the line that creates the certificate signing request, you can just hit enter through everything, but put "hostname" for the "Common Name" option.
+Replace "hostname" with whatever address you want to listen on.
+```sh
+openssl genrsa -out hostname.key 2048
+openssl req -new -key hostname.key -out hostname.csr
+openssl x509 -req -days 9999 -in hostname.csr -signkey hostname.key -out hostname.crt
+```
+
+You should also probably put these created files into a different directory
+```sh
+mv hostname.key hostname.crt hostname.csr /etc/ssl/certs/hostname.crt
+```
+
+If you're using curl to test the proxy, then you're also going to want to make sure curl knows where to look for your new certificate...
+```sh
+export CURL_CA_BUNDLE=/etc/ssl/certs/hostname.crt
+```
+
+If you're using a web browser to test it out then you're going to want to make sure your computer recognizes the certificate.  If you're using a mac, you can do this by going into the 'Keychain Access' app.  Navigate to 'System' on the left sidebar, then go to File -> Import Items...  It will then prompt you to add your hostname.crt file, so just choose it from where you created / moved it (if you put it in the etc folder, then you'll need to do 'CMD + SHIFT + .' to access files in /etc).  Once added, you need to select it and make sure to "Always Trust" the certificate.
+
+
+## warning
+If you're having the listener route to both HTTP and HTTPS depending on the path, then chrome might still tell you the address envoy is listening on is not secure, even if you have a certificate.  Chrome treats websites with mixed HTTP and HTTPS content as not secure.
+
 ## usage
 
 The main application for this program is for websites with many upstream routes that are continuously changing and need constant proxy re-configuration.  With this program, you never need to stop the proxy.
@@ -71,6 +98,3 @@ For adding a new type of configuration, you just need to add a file in the [pars
 
 For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration
 
-```sh
-sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/ssl/certs/key.pem -out /etc/ssl/certs/cert.pem -sha256 -nodes -days 36
-```
