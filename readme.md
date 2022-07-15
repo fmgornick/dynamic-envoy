@@ -7,7 +7,7 @@ This program only works for envoy proxy now, but the goal is to make it extensib
 
 Assuming we're using envoy proxy, you can run envoy to listen for incoming traffic and route to specific upstream clusters.  Users can provide configuration (for now, only in the form of a databag), and this application can send it to envoy at runtime, so envoy doesn't need to be restarted.
 
-You can see examples of how this application takes databag input in the form of json files [here](https://github.com/fmgornick/dynamic-envoy/tree/main/databags).
+You can see examples of how this application takes databag input in the form of json files [here](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/databags).
 
 ## requirements
 
@@ -17,7 +17,7 @@ You can see examples of how this application takes databag input in the form of 
 
 ## quick start
 
-If you want to see a working example of this application, you can use our provided [example server](https://github.com/fmgornick/dynamic-envoy/blob/main/server/server.go) and [databags](https://github.com/fmgornick/dynamic-envoy/tree/main/databags/local) like so...
+If you want to see a working example of this application, you can use our provided [example server](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/server/server.go) and [databags](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/databags) like so...
 
 1. clone this repository:
 ```sh
@@ -66,6 +66,6 @@ The main application for this program is for websites with many upstream routes 
 
 If you would like to add to this project via adding configuration for other proxies, or accepting new user configurations, I tried my best to make this somewhat easily extensible.
 
-For adding a new type of configuration, you just need to add a file in the [parser directory](https://github.com/fmgornick/dynamic-envoy/tree/main/utils/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://github.com/fmgornick/dynamic-envoy/blob/main/utils/config/universal/config.go).  You can see how I made the parser for databags [here](https://github.com/fmgornick/dynamic-envoy/blob/main/utils/parser/databag.go).
+For adding a new type of configuration, you just need to add a file in the [parser directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/config/universal/config.go).  You can see how I made the parser for databags [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/parser/databag.go).
 
-For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://github.com/fmgornick/dynamic-envoy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://github.com/fmgornick/dynamic-envoy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration
+For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration
