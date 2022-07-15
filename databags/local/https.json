@@ -1,0 +1,32 @@
+{
+  "id": "https",
+  "availability": [
+    "internal",
+    "external"
+  ],
+  "backends": [
+    {
+      "availability": ["internal"],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://google.com",
+            "region": "global"
+          }
+        ]
+      }
+    },
+    {
+      "availability": ["external"],
+      "servers": {
+        "endpoints": [
+          {
+            "address": "https://youtube.com",
+            "region": "global"
+          }
+        ]
+      }
+    }
+  ]
+}
+
