@@ -13,6 +13,7 @@ You can see examples of how this application takes databag input in the form of 
 
 1. Go 1.18+
 2. envoy 1.22.2+
+3. openssl 3.0.5+
 
 
 ## quick start
@@ -69,3 +70,7 @@ If you would like to add to this project via adding configuration for other prox
 For adding a new type of configuration, you just need to add a file in the [parser directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/config/universal/config.go).  You can see how I made the parser for databags [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/parser/databag.go).
 
 For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration
+
+```sh
+sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/ssl/certs/key.pem -out /etc/ssl/certs/cert.pem -sha256 -nodes -days 36
+```

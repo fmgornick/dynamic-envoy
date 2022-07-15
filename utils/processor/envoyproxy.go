@@ -54,7 +54,6 @@ func (e *EnvoyProcessor) Process(msg watcher.Message) error {
 	// file moved:   delete corresponding config in map
 	if msg.Operation == watcher.Move || msg.Operation == watcher.Delete {
 		if _, ok := e.Configs[msg.Path]; ok {
-			println("penis")
 			delete(e.Configs, msg.Path)
 		} else {
 			// if it's a directory then delete every key corresponding to it's elements
@@ -145,7 +144,8 @@ func makeListeners(config *univcfg.Config) []types.Resource {
 	var resources []types.Resource
 
 	for _, l := range config.Listeners {
-		resources = append(resources, prxycfg.MakeListener(l.Address, l.Name, l.Port))
+		resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port))
+		resources = append(resources, prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port))
 	}
 
 	return resources
@@ -153,10 +153,16 @@ func makeListeners(config *univcfg.Config) []types.Resource {
 
 // create resources array to hold all our cluster configurations
 func makeClusters(config *univcfg.Config) []types.Resource {
+	var useTLS bool = true
 	var resources []types.Resource
 
 	for name, cluster := range config.Clusters {
-		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy)
+		for _, endpoint := range config.Endpoints[name] {
+			if endpoint.Port != uint(443) {
+				useTLS = false
+			}
+		}
+		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, useTLS)
 		c.LoadAssignment = makeEndpoints(config.Endpoints[name])
 		resources = append(resources, c)
 	}
@@ -243,7 +249,6 @@ func (e *EnvoyProcessor) setSnapshot() error {
 				resource.ListenerType: makeListeners(cfg),
 				resource.ClusterType:  makeClusters(cfg),
 				resource.RouteType:    makeRoutes(cfg),
-				// resource.EndpointType: makeEndpoints(cfg),
 			})
 	}
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	router "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	wellknown "github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
@@ -30,13 +31,9 @@ var clusterPolicy = map[string]int32{
 }
 
 // create listener envoyproxy configuration
-func MakeListener(address string, name string, port uint) *listener.Listener {
-	router := &router.Router{}
-	routerpb, err := anypb.New(router)
-	if err != nil {
-		panic(err)
-	}
-	manager := &hcm.HttpConnectionManager{
+func MakeHTTPSListener(address string, name string, port uint) *listener.Listener {
+	routerpb, _ := anypb.New(&router.Router{})
+	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
 		StatPrefix: "http",
 		RouteSpecifier: &hcm.HttpConnectionManager_Rds{
@@ -66,12 +63,7 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 				TypedConfig: routerpb,
 			},
 		}},
-	}
-	// pbst, err := ptypes.MarshalAny(manager)
-	pbst, err := anypb.New(manager)
-	if err != nil {
-		panic(err)
-	}
+	})
 	return &listener.Listener{
 		Name: name,
 		Address: &core.Address{
@@ -89,7 +81,69 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 			Filters: []*listener.Filter{{
 				Name: wellknown.HTTPConnectionManager,
 				ConfigType: &listener.Filter_TypedConfig{
-					TypedConfig: pbst,
+					TypedConfig: manager,
+				},
+			}},
+			TransportSocket: transportSocket("downstream"),
+		}},
+	}
+}
+
+func MakeHTTPListener(address string, name string, port uint) *listener.Listener {
+	routerpb, _ := anypb.New(&router.Router{})
+	manager, _ := anypb.New(&hcm.HttpConnectionManager{
+		CodecType:  hcm.HttpConnectionManager_AUTO,
+		StatPrefix: "http",
+		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
+			RouteConfig: &route.RouteConfiguration{
+				VirtualHosts: []*route.VirtualHost{{
+					Name:    name + "-http-route",
+					Domains: []string{"*"},
+					Routes: []*route.Route{{
+						Match: &route.RouteMatch{
+							PathSpecifier: &route.RouteMatch_Prefix{
+								Prefix: "/",
+							},
+						},
+						Action: &route.Route_Redirect{
+							Redirect: &route.RedirectAction{
+								SchemeRewriteSpecifier: &route.RedirectAction_HttpsRedirect{
+									HttpsRedirect: true,
+								},
+								PathRewriteSpecifier: &route.RedirectAction_PathRedirect{
+									PathRedirect: "/",
+								},
+							},
+						},
+					}},
+				}},
+			},
+		},
+		HttpFilters: []*hcm.HttpFilter{{
+			Name: wellknown.Router,
+			ConfigType: &hcm.HttpFilter_TypedConfig{
+				TypedConfig: routerpb,
+			},
+		}},
+	})
+	return &listener.Listener{
+		Name: name,
+		Address: &core.Address{
+			Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Protocol: core.SocketAddress_TCP,
+					Address:  address,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: uint32(port),
+					},
+				},
+			},
+		},
+		FilterChains: []*listener.FilterChain{{
+			Filters: []*listener.Filter{{
+				Name: wellknown.HTTPConnectionManager,
+				ConfigType: &listener.Filter_TypedConfig{
+					TypedConfig: manager,
 				},
 			}},
 		}},
@@ -97,8 +151,8 @@ func MakeListener(address string, name string, port uint) *listener.Listener {
 }
 
 // create cluster envoyproxy configuration
-func MakeCluster(name string, policy string) *cluster.Cluster {
-	return &cluster.Cluster{
+func MakeCluster(name string, policy string, useTLS bool) *cluster.Cluster {
+	cluster := &cluster.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(5 * time.Second),
 		// strict DNS is the only one that does multiple endpoints + ips or domains
@@ -107,6 +161,10 @@ func MakeCluster(name string, policy string) *cluster.Cluster {
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
 		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
+	if useTLS {
+		cluster.TransportSocket = transportSocket("upstream")
+	}
+	return cluster
 }
 
 // create route envoyproxy configuration
@@ -180,5 +238,45 @@ func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 			},
 			HostIdentifier: hid,
 		}
+	}
+}
+
+func transportSocket(context string) *core.TransportSocket {
+	commonTls := &tls.CommonTlsContext{
+		TlsCertificates: []*tls.TlsCertificate{{
+			CertificateChain: &core.DataSource{
+				Specifier: &core.DataSource_Filename{
+					Filename: "/etc/ssl/certs/cert.pem",
+				},
+			},
+			PrivateKey: &core.DataSource{
+				Specifier: &core.DataSource_Filename{
+					Filename: "/etc/ssl/certs/key.pem",
+				},
+			},
+		}},
+		ValidationContextType: &tls.CommonTlsContext_ValidationContext{
+			ValidationContext: &tls.CertificateValidationContext{
+				TrustedCa: &core.DataSource{
+					Specifier: &core.DataSource_Filename{
+						Filename: "/etc/ssl/cert.pem",
+					},
+				},
+			},
+		},
+	}
+
+	var ctx *anypb.Any
+	if context == "upstream" {
+		ctx, _ = anypb.New(&tls.UpstreamTlsContext{CommonTlsContext: commonTls})
+	} else {
+		ctx, _ = anypb.New(&tls.DownstreamTlsContext{CommonTlsContext: commonTls})
+	}
+
+	return &core.TransportSocket{
+		Name: wellknown.TransportSocketTLS,
+		ConfigType: &core.TransportSocket_TypedConfig{
+			TypedConfig: ctx,
+		},
 	}
 }
