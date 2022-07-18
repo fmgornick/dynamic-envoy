@@ -247,11 +247,13 @@ func transportSocket(context string) *core.TransportSocket {
 			CertificateChain: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
 					Filename: "/etc/ssl/certs/localhost.crt",
+					// Filename: "/Users/Z00B3R5/dynamic-proxy/certs/youtube.crt",
 				},
 			},
 			PrivateKey: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
 					Filename: "/etc/ssl/certs/localhost.key",
+					// Filename: "/Users/Z00B3R5/dynamic-proxy/certs/youtube.key",
 				},
 			},
 		}},
