@@ -35,7 +35,7 @@ func MakeHTTPSListener(address string, name string, port uint) *listener.Listene
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
-		StatPrefix: "http",
+		StatPrefix: "https",
 		RouteSpecifier: &hcm.HttpConnectionManager_Rds{
 			Rds: &hcm.Rds{
 				ConfigSource: &core.ConfigSource{
@@ -65,7 +65,7 @@ func MakeHTTPSListener(address string, name string, port uint) *listener.Listene
 		}},
 	})
 	return &listener.Listener{
-		Name: name,
+		Name: "https-" + name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -89,7 +89,12 @@ func MakeHTTPSListener(address string, name string, port uint) *listener.Listene
 	}
 }
 
-func MakeHTTPListener(address string, name string, port uint) *listener.Listener {
+func MakeHTTPListener(address string, name string, port uint) []*listener.Listener {
+	var httpsPorts = map[string]uint{
+		"internal": 11111,
+		"external": 22222,
+	}
+
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -110,9 +115,7 @@ func MakeHTTPListener(address string, name string, port uint) *listener.Listener
 								SchemeRewriteSpecifier: &route.RedirectAction_HttpsRedirect{
 									HttpsRedirect: true,
 								},
-								PathRewriteSpecifier: &route.RedirectAction_PathRedirect{
-									PathRedirect: "/",
-								},
+								PortRedirect: uint32(httpsPorts[name]),
 							},
 						},
 					}},
@@ -126,8 +129,8 @@ func MakeHTTPListener(address string, name string, port uint) *listener.Listener
 			},
 		}},
 	})
-	return &listener.Listener{
-		Name: name,
+	http_listener := &listener.Listener{
+		Name: "http-" + name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -148,6 +151,9 @@ func MakeHTTPListener(address string, name string, port uint) *listener.Listener
 			}},
 		}},
 	}
+	https_listener := MakeHTTPSListener(address, name, httpsPorts[name])
+
+	return []*listener.Listener{http_listener, https_listener}
 }
 
 // create cluster envoyproxy configuration
@@ -246,14 +252,12 @@ func transportSocket(context string) *core.TransportSocket {
 		TlsCertificates: []*tls.TlsCertificate{{
 			CertificateChain: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "/etc/ssl/certs/localhost.crt",
-					// Filename: "/Users/Z00B3R5/dynamic-proxy/certs/youtube.crt",
+					Filename: "../certs/localhost.crt",
 				},
 			},
 			PrivateKey: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "/etc/ssl/certs/localhost.key",
-					// Filename: "/Users/Z00B3R5/dynamic-proxy/certs/youtube.key",
+					Filename: "../certs/localhost.key",
 				},
 			},
 		}},

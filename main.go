@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	addHttp   bool
 	directory string
 	nodeId    string
 	xdsPort   uint
@@ -30,6 +31,7 @@ var envoy *processor.EnvoyProcessor // used to send new configuration to envoy
 
 func init() {
 	// initialize environment variables, these can be set by user when running program via setting the flags
+	flag.BoolVar(&addHttp, "add-http", false, "optional flag for setting up listeners with HTTP compatability")
 	flag.StringVar(&directory, "dir", "databags/local", "path to folder containing databag files")
 	flag.StringVar(&nodeId, "id", "envoy-instance", "node id of envoy instance")
 	flag.UintVar(&xdsPort, "xp", 6969, "port number our xds management server is running on")
@@ -46,7 +48,7 @@ func init() {
 func main() {
 	// call to take in command line input
 	flag.Parse()
-	envoy = processor.NewProcessor(nodeId, iAddr, eAddr, iPort, ePort)
+	envoy = processor.NewProcessor(nodeId, addHttp, iAddr, eAddr, iPort, ePort)
 	// remove leading "./"
 	if directory[:2] == "./" {
 		directory = directory[2:]

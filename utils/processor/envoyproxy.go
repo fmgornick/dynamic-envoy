@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	endpointv3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
@@ -23,15 +22,17 @@ import (
 )
 
 type EnvoyProcessor struct {
+	AddHttp      bool                       // controls whether or not proxy listents on HTTP or HTTPS
 	Cache        cache.SnapshotCache        // snapshot config (output for envoyproxy)
 	Configs      map[string]*univcfg.Config // map of universal configs
 	ListenerInfo univcfg.ListenerInfo       // info on what ports and addresses to listen on
 	Node         string                     // name of node for snapshot
-	version      uint                       // keeps track of version number for our envoyproxy config
+	Version      uint                       // keeps track of version number for our envoyproxy config
 }
 
-func NewProcessor(node string, iAddr string, eAddr string, iPort uint, ePort uint) *EnvoyProcessor {
+func NewProcessor(node string, addHttp bool, iAddr string, eAddr string, iPort uint, ePort uint) *EnvoyProcessor {
 	return &EnvoyProcessor{
+		AddHttp: addHttp,
 		Cache:   cache.NewSnapshotCache(false, cache.IDHash{}, nil),
 		Configs: make(map[string]*univcfg.Config),
 		ListenerInfo: univcfg.ListenerInfo{
@@ -41,7 +42,7 @@ func NewProcessor(node string, iAddr string, eAddr string, iPort uint, ePort uin
 			ExternalPort:    ePort,
 		},
 		Node:    node,
-		version: 0,
+		Version: 0,
 	}
 }
 
@@ -140,12 +141,16 @@ func (e *EnvoyProcessor) processFile(msg watcher.Message) error {
 }
 
 // create resources array to hold all our listener configurations
-func makeListeners(config *univcfg.Config) []types.Resource {
+func makeListeners(config *univcfg.Config, http bool) []types.Resource {
 	var resources []types.Resource
 
 	for _, l := range config.Listeners {
-		resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port))
-		// resources = append(resources, prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port))
+		if http {
+			l := prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port)
+			resources = append(resources, l[0], l[1])
+		} else {
+			resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port))
+		}
 	}
 
 	return resources
@@ -159,7 +164,6 @@ func makeClusters(config *univcfg.Config) []types.Resource {
 	for name, cluster := range config.Clusters {
 		https = true
 		for _, endpoint := range config.Endpoints[name] {
-			println(endpoint.Port)
 			if endpoint.Port != uint(443) {
 				https = false
 			}
@@ -215,7 +219,7 @@ func makeRoutes(config *univcfg.Config) []types.Resource {
 }
 
 // create resources array to hold all our endpoint configurations
-func makeEndpoints(edps []*univcfg.Endpoint) *endpointv3.ClusterLoadAssignment {
+func makeEndpoints(edps []*univcfg.Endpoint) *endpoint.ClusterLoadAssignment {
 	// create endpoint array of all the endpoints that a single cluster maps to
 	var endpoints []*endpoint.LbEndpoint
 	for _, e := range edps {
@@ -248,7 +252,7 @@ func (e *EnvoyProcessor) setSnapshot() error {
 		// turn our universal configs into envoy proxy configs and add them to snapshot map
 		snapshot, err = cache.NewSnapshot(e.newVersion(),
 			map[resource.Type][]types.Resource{
-				resource.ListenerType: makeListeners(cfg),
+				resource.ListenerType: makeListeners(cfg, e.AddHttp),
 				resource.ClusterType:  makeClusters(cfg),
 				resource.RouteType:    makeRoutes(cfg),
 			})
@@ -270,6 +274,6 @@ func (e *EnvoyProcessor) setSnapshot() error {
 }
 
 func (e *EnvoyProcessor) newVersion() string {
-	e.version++
-	return strconv.Itoa(int(e.version))
+	e.Version++
+	return strconv.Itoa(int(e.Version))
 }
