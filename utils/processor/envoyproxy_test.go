@@ -15,7 +15,7 @@ import (
 )
 
 func TestProcess(t *testing.T) {
-	e := NewProcessor("node", "internal.address", "external.address", 1111, 2222)
+	e := NewProcessor("node", false, "internal.address", "external.address", 1111, 2222)
 	err := e.Process(watcher.Message{
 		Operation: watcher.Create,
 		Path:      "test_folder",
@@ -41,7 +41,7 @@ func TestProcess(t *testing.T) {
 }
 
 func TestProcessFile(t *testing.T) {
-	e := NewProcessor("node", "internal.address", "external.address", 1111, 2222)
+	e := NewProcessor("node", true, "internal.address", "external.address", 1111, 2222)
 	err1 := e.processFile(watcher.Message{
 		Operation: watcher.Create,
 		Path:      "test_folder/both.json",
