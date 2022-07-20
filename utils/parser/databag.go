@@ -159,7 +159,7 @@ func (bp *BagParser) AddEndpoints() error {
 				if strings.Contains(endpoint.Address, "://") {
 					addr = endpoint.Address
 				} else {
-					addr = "http://" + endpoint.Address
+					addr = "https://" + endpoint.Address
 				}
 
 				u, err := url.Parse(addr)
@@ -170,7 +170,10 @@ func (bp *BagParser) AddEndpoints() error {
 					return fmt.Errorf("invalid schema: %s", u.Scheme)
 				}
 
-				address = u.Hostname()
+				address = u.Hostname() + u.Path
+				if address[len(address)-1] == '/' {
+					address = address[:len(address)-1]
+				}
 				portString := u.Port()
 				if portString == "" {
 					if endpoint.Port == 0 {

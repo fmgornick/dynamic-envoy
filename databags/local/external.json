@@ -12,13 +12,13 @@
       "servers": {
         "endpoints": [
           {
-            "address": "127.0.0.1",
-            "port": 3333,
+            "address": "target.com",
+            "weight": 1,
             "region": "global"
           },
           {
-            "address": "127.0.0.1",
-            "port": 4444,
+            "address": "https://www.targetcenter.com/",
+            "weight": 4,
             "region": "global"
           }
         ]
