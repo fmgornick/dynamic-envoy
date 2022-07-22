@@ -51,7 +51,6 @@ func Parse(bags []usercfg.Bag, l univcfg.ListenerInfo) (*univcfg.Config, error) 
 	if err != nil {
 		return nil, fmt.Errorf("unable to add listeners: %+v", err)
 	}
-
 	err = bp.AddClusters()
 	if err != nil {
 		return nil, fmt.Errorf("unable to add clusters: %+v", err)
@@ -84,9 +83,12 @@ func (bp *BagParser) AddClusters() error {
 			// create cluster name from bag id / path
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
-				return err
+				if err.Error() == "found gcp-external only api: "+bag.Id {
+					break
+				} else {
+					return err
+				}
 			}
-
 			// call universal configs add cluster method to append to our  cluster configs
 			bp.Config.AddCluster(clusterName, policy[backend.Balance])
 		}
@@ -101,7 +103,11 @@ func (bp *BagParser) AddRoutes() error {
 		for _, backend := range bag.Backends {
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
-				return fmt.Errorf("failed to get cluster name: %+v", err)
+				if err.Error() == "found gcp-external only api: "+bag.Id {
+					break
+				} else {
+					return err
+				}
 			}
 			// check if specific path provided, otherwise get path from bag id
 			bagPath := "/" + strings.Replace(bag.Id, "-", "/", -1)
@@ -145,7 +151,11 @@ func (bp *BagParser) AddEndpoints() error {
 			// retrieve name of cluster the endpoint maps to
 			clusterName, err := getClusterName(bag, backend)
 			if err != nil {
-				return err
+				if err.Error() == "found gcp-external only api: "+bag.Id {
+					break
+				} else {
+					return err
+				}
 			}
 			// if server doesn't have any endpoints, then we don't want to delete the cluster
 			if len(backend.Server.Endpoints) == 0 {
