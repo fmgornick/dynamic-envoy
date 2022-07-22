@@ -159,8 +159,8 @@ func TestAddRoutes(t *testing.T) {
 	config := p.Config
 
 	assert.Equal(t, "starts_with", config.Routes["bag-path-internal-route-in"].Type, "route should check prefix")
-	assert.Equal(t, "exact", config.Routes["bag-path-ex"].Type, "route should check whole path")
-	assert.Equal(t, "exact", config.Routes["bag-path-route-ie"].Type, "route should check whole path")
+	assert.Equal(t, "starts_with", config.Routes["bag-path-ex"].Type, "route should check whole path")
+	assert.Equal(t, "starts_with", config.Routes["bag-path-route-ie"].Type, "route should check whole path")
 
 	assert.Equal(t, "/bag/path/internal/route", config.Routes["bag-path-internal-route-in"].Path, "path should match")
 	assert.Equal(t, "/bag/path", config.Routes["bag-path-ex"].Path, "path should match")
@@ -200,7 +200,7 @@ func TestAddEndpoints(t *testing.T) {
 	assert.Equal(t, "external.address1", config.Endpoints["ex"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "external.address2", config.Endpoints["ex"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(3333), config.Endpoints["ex"][0].Port, "port should be same (or retrieved from scheme)")
-	assert.Equal(t, uint(80), config.Endpoints["ex"][1].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["ex"][1].Port, "port should be same (or retrieved from scheme)")
 
 	assert.Equal(t, "both.address1", config.Endpoints["ie"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "both.address2", config.Endpoints["ie"][1].Address, "address should be same (plus ports stripped)")
@@ -215,7 +215,7 @@ func TestAddEndpoints(t *testing.T) {
 	assert.Equal(t, "external.address1", config.Endpoints["bag-ex"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "external.address2", config.Endpoints["bag-ex"][1].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, uint(3333), config.Endpoints["bag-ex"][0].Port, "port should be same (or retrieved from scheme)")
-	assert.Equal(t, uint(80), config.Endpoints["bag-ex"][1].Port, "port should be same (or retrieved from scheme)")
+	assert.Equal(t, uint(443), config.Endpoints["bag-ex"][1].Port, "port should be same (or retrieved from scheme)")
 
 	assert.Equal(t, "both.address1", config.Endpoints["bag-ie"][0].Address, "address should be same (plus ports stripped)")
 	assert.Equal(t, "both.address2", config.Endpoints["bag-ie"][1].Address, "address should be same (plus ports stripped)")
