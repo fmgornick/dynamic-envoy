@@ -8,7 +8,7 @@ import (
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
 
-	prnt "github.com/fmgornick/dynamic-envoy/utils/print"
+	// prnt "github.com/fmgornick/dynamic-envoy/utils/print"
 	processor "github.com/fmgornick/dynamic-envoy/utils/processor"
 	watcher "github.com/fmgornick/dynamic-envoy/utils/watcher"
 	xdsServer "github.com/fmgornick/dynamic-envoy/utils/xdsServer"
@@ -63,8 +63,8 @@ func main() {
 		err = fmt.Errorf("error processing config: %+v\n", err)
 		panic(err)
 	}
-	snapshot, _ := envoy.Cache.GetSnapshot("envoy-instance")
-	prnt.PrettyPrint(snapshot)
+	// snapshot, _ := envoy.Cache.GetSnapshot("envoy-instance")
+	// prnt.PrettyPrint(snapshot)
 
 	// watch for file changes in specified directory
 	go func() {
@@ -87,7 +87,7 @@ func main() {
 				err = fmt.Errorf("error processing new config: %+v\n", err)
 				panic(err)
 			}
-			prnt.EnvoyPrint(envoy.Configs)
+			// prnt.EnvoyPrint(envoy.Configs)
 		}
 	}
 }
