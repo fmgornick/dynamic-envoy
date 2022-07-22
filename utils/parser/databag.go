@@ -196,8 +196,6 @@ func (bp *BagParser) AddEndpoints() error {
 // helper: rename cluster to provide information on which listeners have access
 func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 	var newName string
-	var aBag string
-	var aBack string
 
 	var name string
 	// if a path is given, then we want to make it our new cluster id
@@ -207,27 +205,41 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 		name = strings.Replace(backend.Match.Path.Pattern, "/", "-", -1)[1:]
 	}
 
-	// add extension for the availability of the bag
-	switch len(bag.Availability) {
-	case 0:
-		aBag = "ie"
-	case 1:
-		if bag.Availability[0] == "internal" || bag.Availability[0] == "external" {
-			aBag = bag.Availability[0][:2]
-		} else {
-			return "", fmt.Errorf("invalid element in bag availability array")
-		}
-	case 2:
-		if (bag.Availability[0] == "internal" || bag.Availability[0] == "external") &&
-			(bag.Availability[1] == "internal" || bag.Availability[1] == "external") {
-			aBag = "ie"
-		} else {
-			return "", fmt.Errorf("invalid element in bag availability array")
-		}
-	default:
-		return "", fmt.Errorf("invalid element in bag availability array")
+	if len(bag.Availability) == 0 {
+		return "", fmt.Errorf("must specify availability")
 	}
 
+	zone_mask := 0
+	for _, zone := range bag.Availability {
+		switch zone {
+		case "internal":
+			zone_mask |= 1
+		case "external":
+			zone_mask |= 2
+		case "gcp-external":
+			// pass
+		default:
+			return "", fmt.Errorf("invalid availability: %s", zone)
+		}
+	}
+
+	var aBag string
+	switch zone_mask {
+	case 0:
+		// it is legal for APIs to be gcp-external only
+		// we do not yet handle that case at higher calling functions
+		return "", fmt.Errorf("found gcp-external only api: %s", bag.Id)
+	case 1:
+		aBag = "in"
+	case 2:
+		aBag = "ex"
+	case 3:
+		aBag = "ie"
+	default:
+		return "", fmt.Errorf("unexpected availability bitmask: %d", zone_mask)
+	}
+
+	var aBack string
 	// add extension for the availability of the backend
 	switch len(backend.Availability) {
 	case 0:
