@@ -1,23 +1,12 @@
 {
   "id": "",
-  "availability": [
-    "internal",
-    "external"
-  ],
+  "availability": [ "internal" ],
   "backends": [
     {
-      "availability": [
-        "internal"
-      ],
       "servers": {
         "endpoints": [
           {
-            "address": "https://targetonline.sharepoint.com/",
-            "region": "global"
-          },
-          {
-            "address": "https://apiplatform-team.prod.target.com/",
-            "region": "global"
+            "address": "https://apiplatform-team.prod.target.com/"
           }
         ]
       }

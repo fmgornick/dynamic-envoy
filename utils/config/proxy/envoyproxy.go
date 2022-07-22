@@ -182,7 +182,6 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 			ClusterSpecifier: &route.RouteAction_Cluster{
 				Cluster: clusterName,
 			},
-			PrefixRewrite: "/",
 			HostRewriteSpecifier: &route.RouteAction_AutoHostRewrite{
 				AutoHostRewrite: wpb.Bool(true),
 			},

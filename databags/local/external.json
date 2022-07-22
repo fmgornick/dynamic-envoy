@@ -1,25 +1,17 @@
 {
   "id": "",
-  "availability": [
-    "internal",
-    "external"
-  ],
+  "availability": [ "external" ],
   "backends": [
     {
-      "availability": [
-        "external"
-      ],
       "servers": {
         "endpoints": [
           {
             "address": "target.com",
-            "weight": 1,
-            "region": "global"
+            "weight": 1
           },
           {
             "address": "https://www.targetcenter.com/",
-            "weight": 4,
-            "region": "global"
+            "weight": 4
           }
         ]
       }
