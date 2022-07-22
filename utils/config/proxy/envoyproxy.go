@@ -16,6 +16,7 @@ import (
 	router "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	wellknown "github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
@@ -208,8 +209,21 @@ func MakeRoute(clusterName string, pathPattern string, pathType string) *route.R
 			},
 			Action: action,
 		}
+	case "regex":
+		return &route.Route{
+			Name: clusterName,
+			Match: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_SafeRegex{
+					SafeRegex: &matcher.RegexMatcher{
+						EngineType: &matcher.RegexMatcher_GoogleRe2{},
+						Regex:      pathPattern,
+					},
+				},
+			},
+			Action: action,
+		}
 	default:
-		panic(fmt.Errorf("invalid path type"))
+		panic(fmt.Errorf("invalid path type in clustername: %s", clusterName))
 	}
 }
 
