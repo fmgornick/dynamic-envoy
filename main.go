@@ -8,10 +8,10 @@ import (
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
 
-	prnt "github.com/fmgornick/dynamic-envoy/utils/print"
-	processor "github.com/fmgornick/dynamic-envoy/utils/processor"
-	watcher "github.com/fmgornick/dynamic-envoy/utils/watcher"
-	xdsServer "github.com/fmgornick/dynamic-envoy/utils/xdsServer"
+	prnt "github.com/fmgornick/dynamic-envoy/app/print"
+	processor "github.com/fmgornick/dynamic-envoy/app/processor"
+	watcher "github.com/fmgornick/dynamic-envoy/app/watcher"
+	xdsServer "github.com/fmgornick/dynamic-envoy/app/xdsServer"
 )
 
 var (
