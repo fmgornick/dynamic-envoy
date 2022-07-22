@@ -208,11 +208,11 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 		name = strings.Replace(backend.Match.Path.Pattern, "/", "-", -1)[1:]
 	}
 
+	zone_mask := 0
 	if len(bag.Availability) == 0 {
-		return "", fmt.Errorf("must specify availability")
+		zone_mask |= 3
 	}
 
-	zone_mask := 0
 	for _, zone := range bag.Availability {
 		switch zone {
 		case "internal":
