@@ -24,6 +24,11 @@ var schemes map[string]uint = map[string]uint{
 	"telnet": 23,
 }
 
+var policy map[string]string = map[string]string{
+	"static-rr": "round_robin",
+	"leastconn": "least_request",
+}
+
 // parser has all the databags and an instance of our resource
 // uses the databags to create the resource
 type BagParser struct {
@@ -83,7 +88,7 @@ func (bp *BagParser) AddClusters() error {
 			}
 
 			// call universal configs add cluster method to append to our  cluster configs
-			bp.Config.AddCluster(clusterName, "round_robin")
+			bp.Config.AddCluster(clusterName, policy[backend.Balance])
 		}
 	}
 	return nil
