@@ -34,5 +34,5 @@ static_resources:
             address:
               socket_address:
                 address: 127.0.0.1
-                port_value: 6969
+                port_value: 6515
     http2_protocol_options: {}

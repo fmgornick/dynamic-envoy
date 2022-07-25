@@ -18,7 +18,6 @@ var (
 	addHttp   bool
 	directory string
 	nodeId    string
-	xdsPort   uint
 
 	iAddr string
 	eAddr string
@@ -34,7 +33,6 @@ func init() {
 	flag.BoolVar(&addHttp, "add-http", false, "optional flag for setting up listeners with HTTP compatability")
 	flag.StringVar(&directory, "dir", "databags/local", "path to folder containing databag files")
 	flag.StringVar(&nodeId, "id", "envoy-instance", "node id of envoy instance")
-	flag.UintVar(&xdsPort, "xp", 6969, "port number our xds management server is running on")
 
 	flag.StringVar(&iAddr, "ia", "127.0.0.1", "address the proxy's internal listener listens on")
 	flag.StringVar(&eAddr, "ea", "127.0.0.1", "address the proxy's external listener listens on")
@@ -74,7 +72,7 @@ func main() {
 	// run xds server to send cache updates
 	go func() {
 		server := server.NewServer(context.Background(), envoy.Cache, &test.Callbacks{})
-		xdsServer.RunServer(context.Background(), server, xdsPort)
+		xdsServer.RunServer(context.Background(), server, 6515)
 	}()
 
 	// listen on directory for updates
