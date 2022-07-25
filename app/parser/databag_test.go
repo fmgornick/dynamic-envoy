@@ -182,8 +182,9 @@ func TestAddRoutes(t *testing.T) {
 		},
 	})
 
-	err2 := p.AddRoutes()
-	assert.EqualError(t, err2, "path pattern must start with \"/bag/path\"", "if pattern doesn't have id in start, should return error")
+	// this error is no longer considered invalid
+	// err2 := p.AddRoutes()
+	// assert.EqualError(t, err2, "path pattern must start with \"/bag/path\"", "if pattern doesn't have id in start, should return error")
 }
 
 func TestAddEndpoints(t *testing.T) {
