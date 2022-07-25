@@ -265,12 +265,12 @@ func transportSocket(context string) *core.TransportSocket {
 		TlsCertificates: []*tls.TlsCertificate{{
 			CertificateChain: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "../certs/localhost.crt",
+					Filename: "certs/localhost.crt",
 				},
 			},
 			PrivateKey: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "../certs/localhost.key",
+					Filename: "certs/localhost.key",
 				},
 			},
 		}},
