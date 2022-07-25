@@ -25,6 +25,7 @@ var schemes map[string]uint = map[string]uint{
 }
 
 var policy map[string]string = map[string]string{
+	"":          "round_robin",
 	"static-rr": "round_robin",
 	"leastconn": "least_request",
 }
