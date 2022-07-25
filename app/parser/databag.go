@@ -115,7 +115,9 @@ func (bp *BagParser) AddRoutes() error {
 			if backend.Match.Path.Pattern == "" {
 				bp.Config.AddRoute(clusterName, bagPath, "starts_with")
 			} else {
-				if backend.Match.Path.Type == "" {
+				if !strings.HasPrefix(backend.Match.Path.Pattern, bagPath) && backend.IgnoreDefault != true {
+					return fmt.Errorf("path pattern must start with \"%s\", or set ignore default", bagPath)
+				} else if backend.Match.Path.Type == "" {
 					bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, "starts_with")
 				} else {
 					bp.Config.AddRoute(clusterName, backend.Match.Path.Pattern, backend.Match.Path.Type)

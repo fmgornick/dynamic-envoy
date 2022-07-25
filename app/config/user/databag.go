@@ -14,12 +14,13 @@ type Bag struct {
 }
 
 type Backend struct {
-	Availability []string    `json:"availability"` // "internal", "external", or both.  DEFAULT TO BOTH
-	Balance      string      `json:"balance"`      // load balancing policy, default should be round robin
-	HealthCheck  HealthCheck `json:"healthcheck"`  // don't worry about this for now
-	Match        Match       `json:"match"`        // if match set, then listener should check route paths until finding a match
-	RateLimit    RateLimit   `json:"rate_limit"`   // don't worry about this one either
-	Server       Server      `json:"servers"`      // basically a cluster
+	Availability  []string    `json:"availability"`         // "internal", "external", or both.  DEFAULT TO BOTH
+	Balance       string      `json:"balance"`              // load balancing policy, default should be round robin
+	HealthCheck   HealthCheck `json:"healthcheck"`          // don't worry about this for now
+	IgnoreDefault bool        `json:"ignore_default_match"` // set to true if ignoring default match pattern
+	Match         Match       `json:"match"`                // if match set, then listener should check route paths until finding a match
+	RateLimit     RateLimit   `json:"rate_limit"`           // don't worry about this one either
+	Server        Server      `json:"servers"`              // basically a cluster
 }
 
 type Server struct {
