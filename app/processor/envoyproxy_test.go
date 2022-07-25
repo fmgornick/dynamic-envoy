@@ -10,8 +10,8 @@ import (
 	// endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	clusterv3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	univcfg "github.com/fmgornick/dynamic-envoy/app/config/universal"
-	watcher "github.com/fmgornick/dynamic-envoy/app/watcher"
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
+	watcher "github.com/fmgornick/dynamic-proxy/app/watcher"
 )
 
 func TestProcess(t *testing.T) {

@@ -14,11 +14,11 @@ import (
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 
-	prxycfg "github.com/fmgornick/dynamic-envoy/app/config/proxy"
-	univcfg "github.com/fmgornick/dynamic-envoy/app/config/universal"
-	usercfg "github.com/fmgornick/dynamic-envoy/app/config/user"
-	parser "github.com/fmgornick/dynamic-envoy/app/parser"
-	watcher "github.com/fmgornick/dynamic-envoy/app/watcher"
+	prxycfg "github.com/fmgornick/dynamic-proxy/app/config/proxy"
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
+	usercfg "github.com/fmgornick/dynamic-proxy/app/config/user"
+	parser "github.com/fmgornick/dynamic-proxy/app/parser"
+	watcher "github.com/fmgornick/dynamic-proxy/app/watcher"
 )
 
 type EnvoyProcessor struct {

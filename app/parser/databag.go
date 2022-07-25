@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	univcfg "github.com/fmgornick/dynamic-envoy/app/config/universal"
-	usercfg "github.com/fmgornick/dynamic-envoy/app/config/user"
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
+	usercfg "github.com/fmgornick/dynamic-proxy/app/config/user"
 )
 
 var schemes map[string]uint = map[string]uint{

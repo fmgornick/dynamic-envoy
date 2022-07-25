@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	univcfg "github.com/fmgornick/dynamic-envoy/app/config/universal"
-	usercfg "github.com/fmgornick/dynamic-envoy/app/config/user"
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
+	usercfg "github.com/fmgornick/dynamic-proxy/app/config/user"
 	"github.com/stretchr/testify/assert"
 )
 

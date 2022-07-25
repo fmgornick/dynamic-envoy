@@ -1,4 +1,4 @@
-module github.com/fmgornick/dynamic-envoy
+module github.com/fmgornick/dynamic-proxy
 
 go 1.18
 
