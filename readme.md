@@ -30,7 +30,7 @@ git clone git@github.com:fmgornick/dynamic-proxy
 ```sh
 envoy -c bootstrap/bootstrap.yaml
 ```
-I suggest using tmux in order to have a window to run envoy in as well as a separate window to run this program with.  Possibly even a third window for dynamically adding / deleting / modifying / moving databag files to update the envoy configuration at runtime
+> I suggest using tmux in order to have a window to run envoy in as well as a separate window to run this program with.  Possibly even a third window for dynamically adding / deleting / modifying / moving databag files to update the envoy configuration at runtime
 
 3. run this program (use \'-h\' to see possible flags):
 ```sh
@@ -40,26 +40,24 @@ go build
 ./dynamic-proxy
 ```
 
-here's a list of the possible flags you can set:
-```bash
-$ ./dynamic-proxy -h
-Usage of ./dynamic-proxy:
-  -add-http
-    	optional flag for setting up listeners with HTTP compatability
-  -dir string
-    	path to folder containing databag files (default "databags/local")
-  -ea string
-    	address the proxy's external listener listens on (default "127.0.0.1")
-  -ep uint
-    	port number our external listener listens on (default 8888)
-  -ia string
-    	address the proxy's internal listener listens on (default "127.0.0.1")
-  -id string
-    	node id of envoy instance (default "envoy-instance")
-  -ip uint
-    	port number our internal listener listens on (default 7777)
-```
-you can get a bit more of a detailed explanation of the flags [here](#flags)
+> here's a list of the possible flags you can set:
+> ```bash
+> $ ./dynamic-proxy -h
+> Usage of ./dynamic-proxy:
+>   -add-http
+>     	optional flag for setting up listeners with HTTP compatability
+>   -dir string
+>     	path to folder containing databag files (default "databags/local")
+>   -ea string
+>     	address the proxy's external listener listens on (default "127.0.0.1")
+>   -ep uint
+>     	port number our external listener listens on (default 8888)
+>   -ia string
+>     	address the proxy's internal listener listens on (default "127.0.0.1")
+>   -ip uint
+>     	port number our internal listener listens on (default 7777)
+> ```
+> you can get a bit more of a detailed explanation of the flags [here](#flags)
 
 
 4.  If no flags changed, go to https://localhost:7777 or https://localhost:8888.  Make sure to append the paths specified in the databag backend objects in order to route to a valid upstream.
@@ -79,18 +77,22 @@ Finally, if your certificate isn't for localhost, you must navigate to [app/conf
 
 ## <a name="flags"></a> flag information
 - `-add-http`: if you don't want to type the 'https://' prefix every time you try to use the proxy, you can set this flag and this program will add http listeners on the specified port which then just immediately route the their https counterpart.  When this flag is set, the https listeners are automatically set to port 11111 for internal and port 22222 for external.
+
 - `-dir`: this flag specifies the directory this program watches for changes.  So any time a file is change anywhere in the directory (including sub-directories), this program will update the changes and send them to the xds server to notify envoy proxy.
+
 - `-ea`: stands for "external address", this is the address that the proxy will listen on for incoming external traffic outlined in the databags
+
 - `-ep`: stands for "external port", this is the port that the proxy will listen on for incoming external traffic outlined in the databags
+
 - `-ia`: stands for "internal address", this is the address that the proxy will listen on for incoming internal traffic outlined in the databags
+
 - `-ip`: stands for "internal port", this is the port that the proxy will listen on for incoming internal traffic outlined in the databags
-- `-id`: this is just a string that represents the node-id of our envoy instance, doesn't really do anything important though so it's probably best to just ignore this one
 
 ## warning
 If you're having the listener route to both HTTP and HTTPS depending on the path, then chrome might still tell you the address envoy is listening on is not secure, even if you have a certificate.  Chrome treats websites with mixed HTTP and HTTPS content as not secure.  Even if not, Chrome is very weird and will most likely always say your connection is insecure
 
 ## usage
-The main application for this program is for websites with many upstream routes that are continuously changing and need constant proxy re-configuration.  With this program, you never need to stop the proxy.
+The main application for this program is for websites with many upstream routes that are continuously changing and need constant proxy re-configuration.  With this program, you never need to stop the proxy.  The initial idea was to use this program on https://api.target.com and https://api-internal.target.com, to replace the statically configured HAProxy or atleast run alongside it.
 
 
 ## extension
@@ -98,5 +100,5 @@ If you would like to add to this project via adding configuration for other prox
 
 For adding a new type of configuration, you just need to add a file in the [parser directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/config/universal/config.go).  You can see how I made the parser for databags [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/parser/databag.go).
 
-For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration
+For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration.
 
