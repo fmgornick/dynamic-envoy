@@ -140,6 +140,11 @@ func (e *EnvoyProcessor) processFile(msg watcher.Message) error {
 	return nil
 }
 
+func (e *EnvoyProcessor) ClearConfig() {
+	e.Configs = make(map[string]*univcfg.Config)
+	e.setSnapshot()
+}
+
 // create resources array to hold all our listener configurations
 func makeListeners(config *univcfg.Config, http bool) []types.Resource {
 	var resources []types.Resource

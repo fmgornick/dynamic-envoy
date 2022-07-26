@@ -4,6 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
@@ -24,8 +27,9 @@ var (
 	ePort uint
 )
 
-var change chan watcher.Message     // used to keep track of changes to specified directory
-var envoy *processor.EnvoyProcessor // used to send new configuration to envoy
+var change chan watcher.Message        // used to keep track of changes to specified directory
+var gracefulTermination chan os.Signal // sends last update to envoy to clear everything
+var envoy *processor.EnvoyProcessor    // used to send new configuration to envoy
 
 func init() {
 	// initialize environment variables, these can be set by user when running program via setting the flags
@@ -39,6 +43,10 @@ func init() {
 
 	// initialize directory watcher
 	change = make(chan watcher.Message)
+
+	// initialize termination handler
+	gracefulTermination = make(chan os.Signal, 1)
+	signal.Notify(gracefulTermination, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func main() {
@@ -59,8 +67,7 @@ func main() {
 		err = fmt.Errorf("error processing config: %+v\n", err)
 		panic(err)
 	}
-	snapshot, _ := envoy.Cache.GetSnapshot("envoy-instance")
-	prnt.PrettyPrint(snapshot)
+	prnt.EnvoyPrint(envoy.Configs)
 
 	// watch for file changes in specified directory
 	go func() {
@@ -84,6 +91,12 @@ func main() {
 				panic(err)
 			}
 			prnt.EnvoyPrint(envoy.Configs)
+		case _ = <-gracefulTermination:
+			fmt.Printf("\nemptying configuration...\n")
+			envoy.ClearConfig()
+			prnt.EnvoyPrint(envoy.Configs)
+			fmt.Printf("done!!!\n")
+			os.Exit(0)
 		}
 	}
 }
