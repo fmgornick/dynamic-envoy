@@ -47,7 +47,7 @@ go build
 >   -add-http
 >     	optional flag for setting up listeners with HTTP compatability
 >   -dir string
->     	path to folder containing databag files (default "databags/local")
+>     	path to folder containing databag files (default "databags/dev")
 >   -ea string
 >     	address the proxy's external listener listens on (default "127.0.0.1")
 >   -ep uint

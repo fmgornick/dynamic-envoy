@@ -30,7 +30,7 @@ var envoy *processor.EnvoyProcessor // used to send new configuration to envoy
 func init() {
 	// initialize environment variables, these can be set by user when running program via setting the flags
 	flag.BoolVar(&addHttp, "add-http", false, "optional flag for setting up listeners with HTTP compatability")
-	flag.StringVar(&directory, "dir", "databags/local", "path to folder containing databag files")
+	flag.StringVar(&directory, "dir", "databags/dev", "path to folder containing databag files")
 
 	flag.StringVar(&iAddr, "ia", "127.0.0.1", "address the proxy's internal listener listens on")
 	flag.StringVar(&eAddr, "ea", "127.0.0.1", "address the proxy's external listener listens on")
