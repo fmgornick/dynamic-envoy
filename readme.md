@@ -41,7 +41,7 @@ go build
 ```
 
 > here's a list of the possible flags you can set:
-> ```bash
+> ```
 > $ ./dynamic-proxy -h
 > Usage of ./dynamic-proxy:
 >   -add-http
