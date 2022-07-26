@@ -1,5 +1,6 @@
 .DS_Store
 certs/
+databags/prod/
 databags/stage/
 *.html
 *.out
