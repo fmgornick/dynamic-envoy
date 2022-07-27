@@ -32,7 +32,7 @@ var clusterPolicy = map[string]int32{
 }
 
 // create listener envoyproxy configuration
-func MakeHTTPSListener(address string, name string, port uint) *listener.Listener {
+func MakeHTTPSListener(address string, name string, port uint, cName string) *listener.Listener {
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -85,12 +85,12 @@ func MakeHTTPSListener(address string, name string, port uint) *listener.Listene
 					TypedConfig: manager,
 				},
 			}},
-			TransportSocket: transportSocket("downstream"),
+			TransportSocket: transportSocket("downstream", cName),
 		}},
 	}
 }
 
-func MakeHTTPListener(address string, name string, port uint) []*listener.Listener {
+func MakeHTTPListener(address string, name string, port uint, cName string) []*listener.Listener {
 	var httpsPorts = map[string]uint{
 		"internal": 11111,
 		"external": 22222,
@@ -152,7 +152,7 @@ func MakeHTTPListener(address string, name string, port uint) []*listener.Listen
 			}},
 		}},
 	}
-	https_listener := MakeHTTPSListener(address, name, httpsPorts[name])
+	https_listener := MakeHTTPSListener(address, name, httpsPorts[name], cName)
 
 	return []*listener.Listener{http_listener, https_listener}
 }
@@ -169,7 +169,7 @@ func MakeCluster(name string, policy string, https bool) *cluster.Cluster {
 		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
 	if https {
-		cluster.TransportSocket = transportSocket("upstream")
+		cluster.TransportSocket = transportSocket("upstream", "")
 	}
 	return cluster
 }
@@ -260,17 +260,17 @@ func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 	}
 }
 
-func transportSocket(context string) *core.TransportSocket {
+func transportSocket(context string, cName string) *core.TransportSocket {
 	commonTls := &tls.CommonTlsContext{
 		TlsCertificates: []*tls.TlsCertificate{{
 			CertificateChain: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "certs/localhost.crt",
+					Filename: "certs/" + cName + ".crt",
 				},
 			},
 			PrivateKey: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
-					Filename: "certs/localhost.key",
+					Filename: "certs/" + cName + ".key",
 				},
 			},
 		}},
@@ -278,7 +278,7 @@ func transportSocket(context string) *core.TransportSocket {
 
 	var ctx *anypb.Any
 	if context == "upstream" {
-		ctx, _ = anypb.New(&tls.UpstreamTlsContext{CommonTlsContext: commonTls})
+		ctx, _ = anypb.New(&tls.UpstreamTlsContext{})
 	} else {
 		ctx, _ = anypb.New(&tls.DownstreamTlsContext{CommonTlsContext: commonTls})
 	}

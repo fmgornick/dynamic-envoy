@@ -14,17 +14,20 @@ type Config struct {
 }
 
 type ListenerInfo struct {
-	InternalAddress string // address internal listener listens on
-	ExternalAddress string // address external listener listens on
-	InternalPort    uint   // port internal listener listens on
-	ExternalPort    uint   // port external listener listens on
+	InternalAddress    string // address internal listener listens on
+	ExternalAddress    string // address external listener listens on
+	InternalPort       uint   // port internal listener listens on
+	ExternalPort       uint   // port external listener listens on
+	InternalCommonName string // fully qualified domain name of internal listener
+	ExternalCommonName string // fully qualified domain name of external listener
 }
 
 type Listener struct {
-	Address string   // listen on a specific url
-	Name    string   // either "internal" or "external"
-	Port    uint     // should default to 443
-	Routes  []string // maps to cluster from specific path
+	Address    string   // listen on a specific url
+	Name       string   // either "internal" or "external"
+	Port       uint     // should default to 443
+	CommonName string   // fully qualified domain name of listener
+	Routes     []string // maps to cluster from specific path
 }
 
 type Route struct {
@@ -59,11 +62,12 @@ func NewConfig() *Config {
 }
 
 // add a listener to our configuration object
-func (cfg *Config) AddListener(address string, name string, port uint) {
+func (cfg *Config) AddListener(address string, name string, port uint, cName string) {
 	cfg.Listeners[name] = &Listener{
-		Address: address,
-		Name:    name,
-		Port:    port,
+		Address:    address,
+		Name:       name,
+		Port:       port,
+		CommonName: cName,
 	}
 }
 
@@ -127,7 +131,7 @@ func MergeConfigs(configs map[string]*Config) *Config {
 	for _, config := range configs {
 		for _, l := range config.Listeners {
 			if bigConfig.Listeners[l.Name] == nil {
-				bigConfig.AddListener(l.Address, l.Name, l.Port)
+				bigConfig.AddListener(l.Address, l.Name, l.Port, l.CommonName)
 			}
 			for _, r := range l.Routes {
 				bigConfig.Listeners[l.Name].Routes = append(bigConfig.Listeners[l.Name].Routes, r)

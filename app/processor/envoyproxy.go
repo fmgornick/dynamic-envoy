@@ -30,19 +30,14 @@ type EnvoyProcessor struct {
 	Version      uint                       // keeps track of version number for our envoyproxy config
 }
 
-func NewProcessor(node string, addHttp bool, iAddr string, eAddr string, iPort uint, ePort uint) *EnvoyProcessor {
+func NewProcessor(node string, addHttp bool, listenerInfo univcfg.ListenerInfo) *EnvoyProcessor {
 	return &EnvoyProcessor{
-		AddHttp: addHttp,
-		Cache:   cache.NewSnapshotCache(false, cache.IDHash{}, nil),
-		Configs: make(map[string]*univcfg.Config),
-		ListenerInfo: univcfg.ListenerInfo{
-			InternalAddress: iAddr,
-			ExternalAddress: eAddr,
-			InternalPort:    iPort,
-			ExternalPort:    ePort,
-		},
-		Node:    node,
-		Version: 0,
+		AddHttp:      addHttp,
+		Cache:        cache.NewSnapshotCache(false, cache.IDHash{}, nil),
+		Configs:      make(map[string]*univcfg.Config),
+		ListenerInfo: listenerInfo,
+		Node:         node,
+		Version:      0,
 	}
 }
 
@@ -151,10 +146,10 @@ func makeListeners(config *univcfg.Config, http bool) []types.Resource {
 
 	for _, l := range config.Listeners {
 		if http {
-			l := prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port)
+			l := prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port, l.CommonName)
 			resources = append(resources, l[0], l[1])
 		} else {
-			resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port))
+			resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port, l.CommonName))
 		}
 	}
 

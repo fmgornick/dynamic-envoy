@@ -71,9 +71,10 @@ func Parse(bags []usercfg.Bag, l univcfg.ListenerInfo) (*univcfg.Config, error) 
 
 // add listeners to listener map
 func (bp *BagParser) AddListeners() error {
+	info := bp.ListenerInfo
 	// if given data bags, then it's assumed there will only be 2 listeners
-	bp.Config.AddListener(bp.ListenerInfo.InternalAddress, "internal", bp.ListenerInfo.InternalPort)
-	bp.Config.AddListener(bp.ListenerInfo.ExternalAddress, "external", bp.ListenerInfo.ExternalPort)
+	bp.Config.AddListener(info.InternalAddress, "internal", info.InternalPort, info.InternalCommonName)
+	bp.Config.AddListener(info.ExternalAddress, "external", info.ExternalPort, info.ExternalCommonName)
 	return nil
 }
 

@@ -14,8 +14,17 @@ import (
 	watcher "github.com/fmgornick/dynamic-proxy/app/watcher"
 )
 
+var listenerInfo univcfg.ListenerInfo = univcfg.ListenerInfo{
+	InternalAddress:    "internal.address",
+	ExternalAddress:    "external.address",
+	InternalPort:       uint(1111),
+	ExternalPort:       uint(2222),
+	InternalCommonName: "localhost",
+	ExternalCommonName: "localhost",
+}
+
 func TestProcess(t *testing.T) {
-	e := NewProcessor("node", false, "internal.address", "external.address", 1111, 2222)
+	e := NewProcessor("node", false, listenerInfo)
 	err := e.Process(watcher.Message{
 		Operation: watcher.Create,
 		Path:      "test_folder",
@@ -41,7 +50,7 @@ func TestProcess(t *testing.T) {
 }
 
 func TestProcessFile(t *testing.T) {
-	e := NewProcessor("node", true, "internal.address", "external.address", 1111, 2222)
+	e := NewProcessor("node", true, listenerInfo)
 	err1 := e.processFile(watcher.Message{
 		Operation: watcher.Create,
 		Path:      "test_folder/both.json",
@@ -80,8 +89,8 @@ func TestMakeRoutes(t *testing.T) {
 	config.AddRoute("cluster1-in", "/cluster1/path", "exact")
 	config.AddRoute("cluster1-ie", "/cluster1/path", "exact")
 	config.AddRoute("cluster2-ex", "/cluster2/path", "starts_with")
-	config.AddListener("internal.address", "internal", 1111)
-	config.AddListener("external.address", "external", 2222)
+	config.AddListener("internal.address", "internal", 1111, "localhost")
+	config.AddListener("external.address", "external", 2222, "localhost")
 	config.Listeners["internal"].Routes = []string{"cluster1-in"}
 	config.Listeners["external"].Routes = []string{"cluster1-ie", "cluster2-ex"}
 

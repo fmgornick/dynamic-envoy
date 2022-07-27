@@ -11,6 +11,7 @@ import (
 	server "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	test "github.com/envoyproxy/go-control-plane/pkg/test/v3"
 
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
 	prnt "github.com/fmgornick/dynamic-proxy/app/print"
 	processor "github.com/fmgornick/dynamic-proxy/app/processor"
 	watcher "github.com/fmgornick/dynamic-proxy/app/watcher"
@@ -21,10 +22,12 @@ var (
 	addHttp   bool
 	directory string
 
-	iAddr string
-	eAddr string
-	iPort uint
-	ePort uint
+	iAddr  string
+	eAddr  string
+	iPort  uint
+	ePort  uint
+	iCName string
+	eCName string
 )
 
 var change chan watcher.Message        // used to keep track of changes to specified directory
@@ -40,6 +43,8 @@ func init() {
 	flag.StringVar(&eAddr, "ea", "127.0.0.1", "address the proxy's external listener listens on")
 	flag.UintVar(&iPort, "ip", 7777, "port number our internal listener listens on")
 	flag.UintVar(&ePort, "ep", 8888, "port number our external listener listens on")
+	flag.StringVar(&iCName, "icn", "localhost", "common name of internal listening address")
+	flag.StringVar(&eCName, "ecn", "localhost", "common name of external listening address")
 
 	// initialize directory watcher
 	change = make(chan watcher.Message)
@@ -52,7 +57,15 @@ func init() {
 func main() {
 	// call to take in command line input
 	flag.Parse()
-	envoy = processor.NewProcessor("envoy-instance", addHttp, iAddr, eAddr, iPort, ePort)
+	listenerInfo := univcfg.ListenerInfo{
+		InternalAddress:    iAddr,
+		ExternalAddress:    eAddr,
+		InternalPort:       iPort,
+		ExternalPort:       ePort,
+		InternalCommonName: iCName,
+		ExternalCommonName: eCName,
+	}
+	envoy = processor.NewProcessor("envoy-instance", addHttp, listenerInfo)
 	// remove leading "./"
 	if directory[:2] == "./" {
 		directory = directory[2:]
