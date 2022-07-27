@@ -85,7 +85,7 @@ func MakeHTTPSListener(address string, name string, port uint, cName string) *li
 					TypedConfig: manager,
 				},
 			}},
-			TransportSocket: transportSocket("downstream", cName),
+			TransportSocket: transportSocket(cName),
 		}},
 	}
 }
@@ -169,7 +169,7 @@ func MakeCluster(name string, policy string, https bool) *cluster.Cluster {
 		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
 	}
 	if https {
-		cluster.TransportSocket = transportSocket("upstream", "")
+		cluster.TransportSocket = transportSocket()
 	}
 	return cluster
 }
@@ -260,27 +260,25 @@ func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 	}
 }
 
-func transportSocket(context string, cName string) *core.TransportSocket {
-	commonTls := &tls.CommonTlsContext{
-		TlsCertificates: []*tls.TlsCertificate{{
-			CertificateChain: &core.DataSource{
-				Specifier: &core.DataSource_Filename{
-					Filename: "certs/" + cName + ".crt",
-				},
-			},
-			PrivateKey: &core.DataSource{
-				Specifier: &core.DataSource_Filename{
-					Filename: "certs/" + cName + ".key",
-				},
-			},
-		}},
-	}
-
+func transportSocket(cName ...string) *core.TransportSocket {
 	var ctx *anypb.Any
-	if context == "upstream" {
+	if len(cName) == 0 {
 		ctx, _ = anypb.New(&tls.UpstreamTlsContext{})
 	} else {
-		ctx, _ = anypb.New(&tls.DownstreamTlsContext{CommonTlsContext: commonTls})
+		ctx, _ = anypb.New(&tls.DownstreamTlsContext{CommonTlsContext: &tls.CommonTlsContext{
+			TlsCertificates: []*tls.TlsCertificate{{
+				CertificateChain: &core.DataSource{
+					Specifier: &core.DataSource_Filename{
+						Filename: "certs/" + cName[0] + ".crt",
+					},
+				},
+				PrivateKey: &core.DataSource{
+					Specifier: &core.DataSource_Filename{
+						Filename: "certs/" + cName[0] + ".key",
+					},
+				},
+			}},
+		}})
 	}
 
 	return &core.TransportSocket{
