@@ -50,10 +50,14 @@ go build
 >     	path to folder containing databag files (default "databags/dev")
 >   -ea string
 >     	address the proxy's external listener listens on (default "127.0.0.1")
+>   -ecn string
+>     	common name of external listening address (default "localhost")
 >   -ep uint
 >     	port number our external listener listens on (default 8888)
 >   -ia string
 >     	address the proxy's internal listener listens on (default "127.0.0.1")
+>   -icn string
+>     	common name of internal listening address (default "localhost")
 >   -ip uint
 >     	port number our internal listener listens on (default 7777)
 > ```
@@ -82,9 +86,13 @@ Finally, if your certificate isn't for localhost, you must navigate to [app/conf
 
 - `-ea`: stands for "external address", this is the address that the proxy will listen on for incoming external traffic outlined in the databags
 
+- `-ecn`: stands for "external common name", this is the fully qualified domain name of the external listener address.  Program uses this value to check for certificates matching the common name for SSL verification
+
 - `-ep`: stands for "external port", this is the port that the proxy will listen on for incoming external traffic outlined in the databags
 
 - `-ia`: stands for "internal address", this is the address that the proxy will listen on for incoming internal traffic outlined in the databags
+
+- `-icn`: stands for "internal common name", this is the fully qualified domain name of the internal listener address.  Program uses this value to check for certificates matching the common name for SSL verification
 
 - `-ip`: stands for "internal port", this is the port that the proxy will listen on for incoming internal traffic outlined in the databags
 
