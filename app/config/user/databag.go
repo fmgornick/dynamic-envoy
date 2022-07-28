@@ -36,9 +36,15 @@ type Endpoint struct {
 
 // i don't really know what the healthcheck does (for now)
 type HealthCheck struct {
-	Method string `json:"method"`
-	Path   string `json:"path"`
-	Type   string `json:"type"`
+	Fall     uint   `json:"fall"`
+	Host     string `json:"host"`
+	Interval string `json:"interval"`
+	Method   string `json:"method"`
+	Path     string `json:"path"`
+	Port     uint   `json:"port"`
+	Rise     uint   `json:"rise"`
+	Type     string `json:"type"`
+	Version  string `json:"version"`
 }
 
 type Match struct {

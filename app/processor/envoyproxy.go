@@ -168,7 +168,7 @@ func makeClusters(config *univcfg.Config) []types.Resource {
 				https = false
 			}
 		}
-		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, https)
+		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, cluster.HealthCheck, https)
 		c.LoadAssignment = makeEndpoints(config.Endpoints[name])
 		resources = append(resources, c)
 	}

@@ -30,17 +30,18 @@ type Listener struct {
 	Routes     []string // maps to cluster from specific path
 }
 
+type Cluster struct {
+	Availability uint8        // tells us if the route is internal, external or both
+	Name         string       // should be the path of the url (or config id)
+	Policy       string       // load balancing policy, should default to round robin
+	HealthCheck  *HealthCheck // healthcheck configuration for cluster (optional)
+}
+
 type Route struct {
 	Availability uint8  // tells us if the route is internal, external or both
 	ClusterName  string // maps upstream from route, could have multiple upstreams
 	Path         string // exact path must be specified
 	Type         string // either "path" or "prefix"
-}
-
-type Cluster struct {
-	Availability uint8  // tells us if the route is internal, external or both
-	Name         string // should be the path of the url (or config id)
-	Policy       string // load balancing policy, should default to round robin
 }
 
 type Endpoint struct {
@@ -49,6 +50,16 @@ type Endpoint struct {
 	Port        uint   // default to 443
 	Region      string // "global", "ttc", or "ttce"
 	Weight      uint   // should default to 0 unless "Balance" set to weighted round robin
+}
+
+type HealthCheck struct {
+	Healthy   uint   // number of healthy checks required befor host marked healthy
+	Host      string // value of host header in HTTP health check request
+	Interval  uint   // number of seconds healthcheck interval lasts
+	Path      string // specifies HTTP path used for health check request
+	Port      uint   // port of host getting healtchecked (don't think envoy can do anything with this)
+	Type      string // you can use either HTTP or TCP (default TCP)
+	Unhealthy uint   // number of unhealthy checks required befor host marked unhealthy
 }
 
 // initialize map fields in our object
@@ -73,7 +84,7 @@ func (cfg *Config) AddListener(address string, name string, port uint, cName str
 
 // add a cluster to our configuration object
 // also set availability flag based on cluster name
-func (cfg *Config) AddCluster(name string, policy string) {
+func (cfg *Config) AddCluster(name string, policy string, healthcheck *HealthCheck) {
 	var availability uint8
 	switch name[len(name)-2:] {
 	case "in":
@@ -89,6 +100,7 @@ func (cfg *Config) AddCluster(name string, policy string) {
 		Availability: availability,
 		Name:         name,
 		Policy:       policy,
+		HealthCheck:  healthcheck,
 	}
 }
 
@@ -138,7 +150,7 @@ func MergeConfigs(configs map[string]*Config) *Config {
 			}
 		}
 		for _, c := range config.Clusters {
-			bigConfig.AddCluster(c.Name, c.Policy)
+			bigConfig.AddCluster(c.Name, c.Policy, c.HealthCheck)
 		}
 		for _, r := range config.Routes {
 			bigConfig.AddRoute(r.ClusterName, r.Path, r.Type)

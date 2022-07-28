@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	// TODO: change function parameters to only take in univcfg objects
+	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
+
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	wpb "google.golang.org/protobuf/types/known/wrapperspb"
@@ -158,7 +161,7 @@ func MakeHTTPListener(address string, name string, port uint, cName string) []*l
 }
 
 // create cluster envoyproxy configuration
-func MakeCluster(name string, policy string, https bool) *cluster.Cluster {
+func MakeCluster(name string, policy string, healthcheck *univcfg.HealthCheck, https bool) *cluster.Cluster {
 	cluster := &cluster.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(5 * time.Second),
@@ -170,6 +173,36 @@ func MakeCluster(name string, policy string, https bool) *cluster.Cluster {
 	}
 	if https {
 		cluster.TransportSocket = transportSocket()
+	}
+	if healthcheck != nil {
+		cluster.HealthChecks = []*core.HealthCheck{{
+			Timeout:            &durationpb.Duration{Seconds: int64(5)},
+			Interval:           &durationpb.Duration{Seconds: int64(healthcheck.Interval)},
+			UnhealthyThreshold: &wpb.UInt32Value{Value: uint32(healthcheck.Unhealthy)},
+			HealthyThreshold:   &wpb.UInt32Value{Value: uint32(healthcheck.Healthy)},
+			HealthChecker:      &core.HealthCheck_HttpHealthCheck_{},
+		}}
+		if healthcheck.Type == "http" {
+			if healthcheck.Host == "" {
+				cluster.HealthChecks[0].HealthChecker = &core.HealthCheck_HttpHealthCheck_{
+					HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
+						Path: healthcheck.Path,
+					},
+				}
+			} else {
+				cluster.HealthChecks[0].HealthChecker = &core.HealthCheck_HttpHealthCheck_{
+					HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
+						Path: healthcheck.Path,
+						Host: healthcheck.Host,
+					},
+				}
+			}
+		} else {
+			cluster.HealthChecks[0].HealthChecker = &core.HealthCheck_TcpHealthCheck_{
+				TcpHealthCheck: &core.HealthCheck_TcpHealthCheck{},
+			}
+		}
+
 	}
 	return cluster
 }

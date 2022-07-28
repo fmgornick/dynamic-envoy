@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"net/url"
+	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -91,8 +93,8 @@ func (bp *BagParser) AddClusters() error {
 					return err
 				}
 			}
-			// call universal configs add cluster method to append to our  cluster configs
-			bp.Config.AddCluster(clusterName, policy[backend.Balance])
+			healthcheck := convertHealthCheck(backend.HealthCheck)
+			bp.Config.AddCluster(clusterName, policy[backend.Balance], healthcheck)
 		}
 	}
 	return nil
@@ -305,4 +307,53 @@ func getClusterName(bag usercfg.Bag, backend usercfg.Backend) (string, error) {
 	}
 
 	return newName, nil
+}
+
+func convertHealthCheck(userHealthCheck usercfg.HealthCheck) *univcfg.HealthCheck {
+	if reflect.DeepEqual(userHealthCheck, usercfg.HealthCheck{
+		Fall:     0,
+		Host:     "",
+		Interval: "",
+		Method:   "",
+		Path:     "",
+		Port:     0,
+		Rise:     0,
+		Type:     "",
+		Version:  "",
+	}) {
+		return nil
+	}
+
+	nums := regexp.MustCompile("[0-9]+").FindAllString(userHealthCheck.Interval, -1)
+	var interval int
+	if nums == nil {
+		interval = 5
+	} else {
+		interval, _ = strconv.Atoi(nums[0])
+	}
+
+	univHealthCheck := &univcfg.HealthCheck{
+		Healthy:   userHealthCheck.Rise,
+		Host:      userHealthCheck.Host,
+		Interval:  uint(interval),
+		Path:      userHealthCheck.Path,
+		Port:      userHealthCheck.Port,
+		Type:      userHealthCheck.Type,
+		Unhealthy: userHealthCheck.Fall,
+	}
+
+	if univHealthCheck.Healthy == 0 {
+		univHealthCheck.Healthy = 2
+	}
+	if univHealthCheck.Path == "" {
+		univHealthCheck.Path = "/"
+	}
+	if univHealthCheck.Type == "" {
+		univHealthCheck.Type = "tcp"
+	}
+	if univHealthCheck.Unhealthy == 0 {
+		univHealthCheck.Unhealthy = 3
+	}
+
+	return univHealthCheck
 }

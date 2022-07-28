@@ -122,8 +122,8 @@ func TestMakeRoutes(t *testing.T) {
 
 func TestMakeEndpoints(t *testing.T) {
 	config := univcfg.NewConfig()
-	config.AddCluster("cluster1-in", "round_robin")
-	config.AddCluster("cluster2-in", "round_robin")
+	config.AddCluster("cluster1-in", "round_robin", nil)
+	config.AddCluster("cluster2-in", "round_robin", nil)
 	config.AddEndpoint("address1", "cluster1-in", 1111, "", 1)
 	config.AddEndpoint("address2", "cluster2-in", 2222, "", 2)
 	config.AddEndpoint("address3", "cluster1-in", 3333, "", 4)
