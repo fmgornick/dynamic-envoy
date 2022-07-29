@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	// TODO: change function parameters to only take in univcfg objects
 	univcfg "github.com/fmgornick/dynamic-proxy/app/config/universal"
 
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -35,7 +34,7 @@ var clusterPolicy = map[string]int32{
 }
 
 // create listener envoyproxy configuration
-func MakeHTTPSListener(address string, name string, port uint, cName string) *listener.Listener {
+func MakeHTTPSListener(l *univcfg.Listener) *listener.Listener {
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -58,7 +57,7 @@ func MakeHTTPSListener(address string, name string, port uint, cName string) *li
 					},
 				},
 				// link internal listener to internal route configuration
-				RouteConfigName: name + "-routes",
+				RouteConfigName: l.Name + "-routes",
 			},
 		},
 		HttpFilters: []*hcm.HttpFilter{{
@@ -69,14 +68,14 @@ func MakeHTTPSListener(address string, name string, port uint, cName string) *li
 		}},
 	})
 	return &listener.Listener{
-		Name: "https-" + name,
+		Name: "https-" + l.Name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
 					Protocol: core.SocketAddress_TCP,
-					Address:  address,
+					Address:  l.Address,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(port),
+						PortValue: uint32(l.Port),
 					},
 				},
 			},
@@ -88,12 +87,12 @@ func MakeHTTPSListener(address string, name string, port uint, cName string) *li
 					TypedConfig: manager,
 				},
 			}},
-			TransportSocket: transportSocket(cName),
+			TransportSocket: transportSocket(l.CommonName),
 		}},
 	}
 }
 
-func MakeHTTPListener(address string, name string, port uint, cName string) []*listener.Listener {
+func MakeHTTPListener(l *univcfg.Listener) []*listener.Listener {
 	var httpsPorts = map[string]uint{
 		"internal": 11111,
 		"external": 22222,
@@ -106,7 +105,7 @@ func MakeHTTPListener(address string, name string, port uint, cName string) []*l
 		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
 			RouteConfig: &route.RouteConfiguration{
 				VirtualHosts: []*route.VirtualHost{{
-					Name:    name + "-http-route",
+					Name:    l.Name + "-http-route",
 					Domains: []string{"*"},
 					Routes: []*route.Route{{
 						Match: &route.RouteMatch{
@@ -119,7 +118,7 @@ func MakeHTTPListener(address string, name string, port uint, cName string) []*l
 								SchemeRewriteSpecifier: &route.RedirectAction_HttpsRedirect{
 									HttpsRedirect: true,
 								},
-								PortRedirect: uint32(httpsPorts[name]),
+								PortRedirect: uint32(httpsPorts[l.Name]),
 							},
 						},
 					}},
@@ -134,14 +133,14 @@ func MakeHTTPListener(address string, name string, port uint, cName string) []*l
 		}},
 	})
 	http_listener := &listener.Listener{
-		Name: "http-" + name,
+		Name: "http-" + l.Name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
 					Protocol: core.SocketAddress_TCP,
-					Address:  address,
+					Address:  l.Address,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(port),
+						PortValue: uint32(l.Port),
 					},
 				},
 			},
@@ -155,45 +154,46 @@ func MakeHTTPListener(address string, name string, port uint, cName string) []*l
 			}},
 		}},
 	}
-	https_listener := MakeHTTPSListener(address, name, httpsPorts[name], cName)
+	https_listener := MakeHTTPSListener(l)
 
 	return []*listener.Listener{http_listener, https_listener}
 }
 
 // create cluster envoyproxy configuration
-func MakeCluster(name string, policy string, healthcheck *univcfg.HealthCheck, https bool) *cluster.Cluster {
+// TODO: find a way to get hostname for healthcheck
+func MakeCluster(c *univcfg.Cluster, https bool) *cluster.Cluster {
 	cluster := &cluster.Cluster{
-		Name:           name,
+		Name:           c.Name,
 		ConnectTimeout: durationpb.New(5 * time.Second),
 		// strict DNS is the only one that does multiple endpoints + ips or domains
 		// logical DNS only does 1 enpoint
 		// eds config only does IPs
 		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STRICT_DNS},
-		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[policy]),
+		LbPolicy:             cluster.Cluster_LbPolicy(clusterPolicy[c.Policy]),
 	}
 	if https {
 		cluster.TransportSocket = transportSocket()
 	}
-	if healthcheck != nil {
+	if c.HealthCheck != nil {
 		cluster.HealthChecks = []*core.HealthCheck{{
 			Timeout:            &durationpb.Duration{Seconds: int64(5)},
-			Interval:           &durationpb.Duration{Seconds: int64(healthcheck.Interval)},
-			UnhealthyThreshold: &wpb.UInt32Value{Value: uint32(healthcheck.Unhealthy)},
-			HealthyThreshold:   &wpb.UInt32Value{Value: uint32(healthcheck.Healthy)},
+			Interval:           &durationpb.Duration{Seconds: int64(c.HealthCheck.Interval)},
+			UnhealthyThreshold: &wpb.UInt32Value{Value: uint32(c.HealthCheck.Unhealthy)},
+			HealthyThreshold:   &wpb.UInt32Value{Value: uint32(c.HealthCheck.Healthy)},
 			HealthChecker:      &core.HealthCheck_HttpHealthCheck_{},
 		}}
-		if healthcheck.Type == "http" {
-			if healthcheck.Host == "" {
+		if c.HealthCheck.Type == "http" {
+			if c.HealthCheck.Host == "" {
 				cluster.HealthChecks[0].HealthChecker = &core.HealthCheck_HttpHealthCheck_{
 					HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-						Path: healthcheck.Path,
+						Path: c.HealthCheck.Path,
 					},
 				}
 			} else {
 				cluster.HealthChecks[0].HealthChecker = &core.HealthCheck_HttpHealthCheck_{
 					HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-						Path: healthcheck.Path,
-						Host: healthcheck.Host,
+						Path: c.HealthCheck.Path,
+						Host: c.HealthCheck.Host,
 					},
 				}
 			}
@@ -208,60 +208,60 @@ func MakeCluster(name string, policy string, healthcheck *univcfg.HealthCheck, h
 }
 
 // create route envoyproxy configuration
-func MakeRoute(clusterName string, pathPattern string, pathType string) *route.Route {
+func MakeRoute(r *univcfg.Route) *route.Route {
 	// if we only care about the start of the path then we use the prefix match
 	// if we care about the whole path then we use the path match
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
 			ClusterSpecifier: &route.RouteAction_Cluster{
-				Cluster: clusterName,
+				Cluster: r.ClusterName,
 			},
 			HostRewriteSpecifier: &route.RouteAction_AutoHostRewrite{
 				AutoHostRewrite: wpb.Bool(true),
 			},
 		},
 	}
-	switch pathType {
+	switch r.Type {
 	case "starts_with":
 		return &route.Route{
-			Name: clusterName,
+			Name: r.ClusterName,
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_Prefix{
-					Prefix: pathPattern,
+					Prefix: r.Path,
 				},
 			},
 			Action: action,
 		}
 	case "exact":
 		return &route.Route{
-			Name: clusterName,
+			Name: r.ClusterName,
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_Path{
-					Path: pathPattern,
+					Path: r.Path,
 				},
 			},
 			Action: action,
 		}
 	case "regex":
 		return &route.Route{
-			Name: clusterName,
+			Name: r.ClusterName,
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
 						EngineType: &matcher.RegexMatcher_GoogleRe2{},
-						Regex:      pathPattern,
+						Regex:      r.Path,
 					},
 				},
 			},
 			Action: action,
 		}
 	default:
-		panic(fmt.Errorf("invalid path type in clustername: %s", clusterName))
+		panic(fmt.Errorf("invalid path type in clustername: %s", r.ClusterName))
 	}
 }
 
 // create endpoint envoyproxy configuration
-func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
+func MakeEndpoint(e *univcfg.Endpoint) *endpoint.LbEndpoint {
 	// give the endpoints an assigned weight only if weight is specified
 	// in the user configuration
 	hid := &endpoint.LbEndpoint_Endpoint{
@@ -270,23 +270,23 @@ func MakeEndpoint(address string, port uint, weight uint) *endpoint.LbEndpoint {
 				Address: &core.Address_SocketAddress{
 					SocketAddress: &core.SocketAddress{
 						Protocol: core.SocketAddress_TCP,
-						Address:  address,
+						Address:  e.Address,
 						PortSpecifier: &core.SocketAddress_PortValue{
-							PortValue: uint32(port),
+							PortValue: uint32(e.Port),
 						},
 					},
 				},
 			},
 		},
 	}
-	if weight == 0 {
+	if e.Weight == 0 {
 		return &endpoint.LbEndpoint{
 			HostIdentifier: hid,
 		}
 	} else {
 		return &endpoint.LbEndpoint{
 			LoadBalancingWeight: &wpb.UInt32Value{
-				Value: uint32(weight),
+				Value: uint32(e.Weight),
 			},
 			HostIdentifier: hid,
 		}

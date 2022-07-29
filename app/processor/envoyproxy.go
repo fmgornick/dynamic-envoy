@@ -146,10 +146,10 @@ func makeListeners(config *univcfg.Config, http bool) []types.Resource {
 
 	for _, l := range config.Listeners {
 		if http {
-			l := prxycfg.MakeHTTPListener(l.Address, l.Name, l.Port, l.CommonName)
+			l := prxycfg.MakeHTTPListener(l)
 			resources = append(resources, l[0], l[1])
 		} else {
-			resources = append(resources, prxycfg.MakeHTTPSListener(l.Address, l.Name, l.Port, l.CommonName))
+			resources = append(resources, prxycfg.MakeHTTPSListener(l))
 		}
 	}
 
@@ -168,7 +168,7 @@ func makeClusters(config *univcfg.Config) []types.Resource {
 				https = false
 			}
 		}
-		c := prxycfg.MakeCluster(cluster.Name, cluster.Policy, cluster.HealthCheck, https)
+		c := prxycfg.MakeCluster(cluster, https)
 		c.LoadAssignment = makeEndpoints(config.Endpoints[name])
 		resources = append(resources, c)
 	}
@@ -188,13 +188,13 @@ func makeRoutes(config *univcfg.Config) []types.Resource {
 	// add each route to our internal route array
 	for _, routeName := range config.Listeners["internal"].Routes {
 		r := config.Routes[routeName]
-		internalRoutes = append(internalRoutes, prxycfg.MakeRoute(r.ClusterName, r.Path, r.Type))
+		internalRoutes = append(internalRoutes, prxycfg.MakeRoute(r))
 	}
 	// iterate through internal routes listed in external listener
 	// add each route to our external route array
 	for _, routeName := range config.Listeners["external"].Routes {
 		r := config.Routes[routeName]
-		externalRoutes = append(externalRoutes, prxycfg.MakeRoute(r.ClusterName, r.Path, r.Type))
+		externalRoutes = append(externalRoutes, prxycfg.MakeRoute(r))
 	}
 	// add internal route configuration to resources array for internal routes
 	resources = append(resources, &route.RouteConfiguration{
@@ -223,7 +223,7 @@ func makeEndpoints(edps []*univcfg.Endpoint) *endpoint.ClusterLoadAssignment {
 	// create endpoint array of all the endpoints that a single cluster maps to
 	var endpoints []*endpoint.LbEndpoint
 	for _, e := range edps {
-		endpoints = append(endpoints, prxycfg.MakeEndpoint(e.Address, e.Port, e.Weight))
+		endpoints = append(endpoints, prxycfg.MakeEndpoint(e))
 	}
 	// add this new array of endpoints to our resources array
 	return &endpoint.ClusterLoadAssignment{
