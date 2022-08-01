@@ -23,12 +23,12 @@ If you want to see a working example of this application, you can run it yoursel
 
 1. clone this repository:
 ```sh
-git clone git@github.com:fmgornick/dynamic-proxy
+git clone https://git.target.com/FletcherGornick/dynamic-proxy.git
 ```
 
 2. start envoy server (can also run in background with \'&\' suffix):
 ```sh
-envoy -c bootstrap/bootstrap.yaml
+envoy -c bootstrap.yml
 ```
 > I suggest using tmux in order to have a window to run envoy in as well as a separate window to run this program with.  Possibly even a third window for dynamically adding / deleting / modifying / moving databag files to update the envoy configuration at runtime
 
