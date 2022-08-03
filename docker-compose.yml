@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  configuration:
+    build: configuration
+    image: fmgornick/dynamic-proxy
+    ports:
+      - "10000:7777"
+      - "10001:8888"
+    command: ["-dir", "databags/dev", "-ia", "0.0.0.0", "-ea", "0.0.0.0"]
+    volumes:
+      - databags:/home/user/app/databags
