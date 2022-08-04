@@ -2,23 +2,18 @@ version: "3.9"
 
 services:
   app:
+    container_name: app
     image: fmgornick/dynamic-proxy
-    ports:
-      - "${INTERNAL}:7777"
-      - "${EXTERNAL}:8888"
-    command: ["-dir", "${DIR}", "-xds", "envoy"]
-    networks:
-      - xds-network
+    command: ["-dir", "${DIR}"]
+    network_mode: host
     volumes:
       - ${PWD}/databags:/home/user/app/databags
 
   envoy:
+    container_name: envoy
     image: envoyproxy/envoy-dev
-    networks:
-      - xds-network
+    network_mode: host
+    working_dir: /etc/envoy
     volumes:
       - ${PWD}/bootstrap.yml:/etc/envoy/envoy.yaml
       - ${PWD}/certs:/etc/envoy/certs
-
-networks:
-  xds-network: { driver: bridge }

@@ -1,5 +1,4 @@
 FROM golang
-RUN apt-get update && apt-get install -y iputils-ping
 
 # set up app in /home/user/app
 RUN mkdir -p /home/user/app
