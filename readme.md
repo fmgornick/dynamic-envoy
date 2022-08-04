@@ -49,17 +49,19 @@ go build
 >   -dir string
 >     	path to folder containing databag files (default "databags/dev")
 >   -ea string
->     	address the proxy's external listener listens on (default "127.0.0.1")
+>     	address the proxy's external listener listens on (default "0.0.0.0")
 >   -ecn string
 >     	common name of external listening address (default "localhost")
 >   -ep uint
 >     	port number our external listener listens on (default 8888)
 >   -ia string
->     	address the proxy's internal listener listens on (default "127.0.0.1")
+>     	address the proxy's internal listener listens on (default "0.0.0.0")
 >   -icn string
 >     	common name of internal listening address (default "localhost")
 >   -ip uint
 >     	port number our internal listener listens on (default 7777)
+>   -xds string
+>     	address the proxy's external listener listens on (default "127.0.0.1")
 > ```
 > you can get a bit more of a detailed explanation of the flags [here](#flags)
 
@@ -95,6 +97,8 @@ Finally, if your certificate isn't for localhost, you must navigate to [app/conf
 - `-icn`: stands for "internal common name", this is the fully qualified domain name of the internal listener address.  Program uses this value to check for certificates matching the common name for SSL verification
 
 - `-ip`: stands for "internal port", this is the port that the proxy will listen on for incoming internal traffic outlined in the databags
+
+- `-xds`: address that program sends to for envoyproxy to recieve configuration updates through gRPC stream
 
 ## warning
 If you're having the listener route to both HTTP and HTTPS depending on the path, then chrome might still tell you the address envoy is listening on is not secure, even if you have a certificate.  Chrome treats websites with mixed HTTP and HTTPS content as not secure.  Even if not, Chrome is very weird and will most likely always say your connection is insecure
