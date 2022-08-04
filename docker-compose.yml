@@ -4,20 +4,21 @@ services:
   app:
     image: fmgornick/dynamic-proxy
     ports:
-      - "7777:7777"
-      - "8888:8888"
-      # - "6515:6515"
-    command: ["-dir", "databags/dev", "-ia", "0.0.0.0", "-ea", "0.0.0.0"]
+      - "${INTERNAL}:7777"
+      - "${EXTERNAL}:8888"
+    command: ["-dir", "${DIR}", "-xds", "envoy"]
+    networks:
+      - xds-network
     volumes:
       - ${PWD}/databags:/home/user/app/databags
 
   envoy:
     image: envoyproxy/envoy-dev
-    # ports:
-    #   - "6515:6515"
+    networks:
+      - xds-network
     volumes:
       - ${PWD}/bootstrap.yml:/etc/envoy/envoy.yaml
+      - ${PWD}/certs:/etc/envoy/certs
 
-volumes:
-  databags: { external: false }
-  bootstrap.yml: { external: false }
+networks:
+  xds-network: { driver: bridge }
