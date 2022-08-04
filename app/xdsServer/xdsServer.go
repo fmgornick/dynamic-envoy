@@ -23,10 +23,10 @@ func registerServer(grpcServer *grpc.Server, server server.Server) {
 }
 
 // start xds server on given port
-func RunServer(ctx context.Context, server server.Server, address string, port uint) {
+func RunServer(ctx context.Context, server server.Server, port uint) {
 	grpcServer := grpc.NewServer()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(err)
 	}

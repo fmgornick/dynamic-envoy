@@ -22,13 +22,12 @@ var (
 	addHttp   bool
 	directory string
 
-	iAddr   string
-	eAddr   string
-	iPort   uint
-	ePort   uint
-	xdsAddr string
-	iCName  string
-	eCName  string
+	iAddr  string
+	eAddr  string
+	iPort  uint
+	ePort  uint
+	iCName string
+	eCName string
 )
 
 var change chan watcher.Message        // used to keep track of changes to specified directory
@@ -42,7 +41,6 @@ func init() {
 
 	flag.StringVar(&iAddr, "ia", "0.0.0.0", "address the proxy's internal listener listens on")
 	flag.StringVar(&eAddr, "ea", "0.0.0.0", "address the proxy's external listener listens on")
-	flag.StringVar(&eAddr, "xds", "127.0.0.1", "address the proxy's external listener listens on")
 	flag.UintVar(&iPort, "ip", 7777, "port number our internal listener listens on")
 	flag.UintVar(&ePort, "ep", 8888, "port number our external listener listens on")
 	flag.StringVar(&iCName, "icn", "localhost", "common name of internal listening address")
@@ -93,7 +91,7 @@ func main() {
 	// run xds server to send cache updates
 	go func() {
 		server := server.NewServer(context.Background(), envoy.Cache, &test.Callbacks{})
-		xdsServer.RunServer(context.Background(), server, xdsAddr, 6515)
+		xdsServer.RunServer(context.Background(), server, 6515)
 	}()
 
 	// listen on directory for updates
