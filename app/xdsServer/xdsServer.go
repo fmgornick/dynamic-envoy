@@ -23,17 +23,17 @@ func registerServer(grpcServer *grpc.Server, server server.Server) {
 }
 
 // start xds server on given port
-func RunServer(ctx context.Context, server server.Server, port uint) {
+func RunServer(ctx context.Context, server server.Server, address string, port uint) {
 	grpcServer := grpc.NewServer()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
 		panic(err)
 	}
 
 	registerServer(grpcServer, server)
 
-	fmt.Printf("xds server listening on port %d...\n\n", port)
+	fmt.Printf("sending config updates through gRPC stream on port %d...\n\n", port)
 	if err = grpcServer.Serve(lis); err != nil {
 		panic(err)
 	}
