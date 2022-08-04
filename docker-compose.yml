@@ -1,11 +1,23 @@
 version: "3.9"
+
 services:
-  configuration:
-    build: configuration
+  app:
     image: fmgornick/dynamic-proxy
     ports:
-      - "10000:7777"
-      - "10001:8888"
+      - "7777:7777"
+      - "8888:8888"
+      # - "6515:6515"
     command: ["-dir", "databags/dev", "-ia", "0.0.0.0", "-ea", "0.0.0.0"]
     volumes:
-      - databags:/home/user/app/databags
+      - ${PWD}/databags:/home/user/app/databags
+
+  envoy:
+    image: envoyproxy/envoy-dev
+    # ports:
+    #   - "6515:6515"
+    volumes:
+      - ${PWD}/bootstrap.yml:/etc/envoy/envoy.yaml
+
+volumes:
+  databags: { external: false }
+  bootstrap.yml: { external: false }
