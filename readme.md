@@ -15,11 +15,20 @@ You can see examples of how this application takes databag input in the form of 
 2. envoy 1.22.2+
 3. openssl 3.0.5+
 4. tmux 3.3+ (optional)
+#### OR
+1. Docker 20.10.17+
+2. openssl 3.0.5+
 
 
 ## quick start
 
-If you want to see a working example of this application, you can run it yourself with the following steps.  But first, you should generate a certificate on the address you'd like to listen on for routing to HTTPS websites.  You can see how to do that [here](#ssl).  Once that's set, you can run this program like so...
+If you want to see a working example of this application, you can run it yourself with the following steps.  But first, you should generate a certificate on the address you'd like to listen on for routing to HTTPS websites.  You can see how to do that [here](#ssl).  
+
+Once an SSL certificate is generated, you can run the program through two methods.  The easiest method is to use the `docker-compose.yml` file I have provided which does most of the heavy lifting, I explain further [here](#docker), otherwise you can try running everything locally by looking [below](#local)
+
+Also, if running locally, make sure the static cluster address is set to localhost in the `bootstrap.yml` file.  It should automatically be set to app for use by docker.
+
+### <a name="local"></a> running locally
 
 1. clone this repository:
 ```sh
@@ -67,6 +76,27 @@ go build
 4.  If no flags changed, go to https://localhost:7777 or https://localhost:8888.  Make sure to append the paths specified in the databag backend objects in order to route to a valid upstream.
 
 5. you can add / delete / modify / move files to the directory the application is watching and see as the envoy configuration updates real time.
+
+
+### <a name="docker"></a> run using docker
+the much simpler approach is to use docker.  To get everything running properly, you must first generate an SSL cert by running `./add-cert.sh hostname`.
+
+Now it's just a matter of setting variables.  This project should contain a `.env` file which you can use to change listener ports as well as the directory this app will watch.
+
+Once you set the environment variables, you can just run `docker compose up -d`.  This will mount the databag directory onto my `fmgornick/dynamic-proxy` image running on a container titled "app", and can recieve updates when you make changes.
+
+There's also an `envoyproxy/envoy-dev` image running on the container "proxy" which depends on the "app" container.  With all this set up, you can alter the directory being watched by the "app" container and it should automatically update the changes and send them to the "proxy" container.
+
+You can see the output of the containers by running
+```sh
+# to see output of envoy proxy
+docker logs proxy
+
+# to see output of dynamic proxy app
+docker logs app
+```
+
+and when you're done with everything, just run `docker compose down` to stop everything and clean up the containers
 
 
 ## <a name="ssl"></a> generating SSL certificate for HTTPS connection
