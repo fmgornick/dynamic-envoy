@@ -28,7 +28,7 @@ func RunServer(ctx context.Context, server server.Server, port uint) {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error setting up xds server: %+v", err))
 	}
 
 	registerServer(grpcServer, server)

@@ -1,19 +1,22 @@
 version: "3.9"
 
 services:
-  app:
-    container_name: app
-    image: fmgornick/dynamic-proxy
-    command: ["-dir", "${DIR}"]
-    network_mode: host
-    volumes:
-      - ${PWD}/databags:/home/user/app/databags
-
-  envoy:
-    container_name: envoy
+  proxy:
+    container_name: proxy
     image: envoyproxy/envoy-dev
-    network_mode: host
+    ports:
+      - ${INTERNAL}:7777
+      - ${EXTERNAL}:8888
     working_dir: /etc/envoy
     volumes:
       - ${PWD}/bootstrap.yml:/etc/envoy/envoy.yaml
       - ${PWD}/certs:/etc/envoy/certs
+    depends_on: 
+      - app
+
+  app:
+    container_name: app
+    image: fmgornick/dynamic-proxy
+    volumes:
+      - ${PWD}/databags:/home/user/app/databags
+    command: ["-dir", "${DIR}"]
