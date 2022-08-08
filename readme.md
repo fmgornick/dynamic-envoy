@@ -105,12 +105,12 @@ and when you're done with everything, just run `docker compose down` to stop eve
 ## <a name="ssl"></a> generating SSL certificate for HTTPS connection
 I currently have a script that generates an SSL certificate + key for any given hostname.  To run it, just type the following command (replacing "hostname" with the hostname you want to generate a certificate for of course):
 ```sh
-./scripts/add-certs.sh hostname
+./scripts/add-certs.sh <hostname>
 ```
 
 This will create a new directory called "certs" in the root of this project.  Once the certificate is generated, you'll need to make sure your computer recognizes it.  If you're using a mac, you can do this by going into the 'Keychain Access' app.  Navigate to 'System' on the left sidebar, then go to File -> Import Items...  It will then prompt you to add your hostname.crt file, so just choose it from where you created / moved it (if you put it in the etc folder, then you'll need to do 'CMD + SHIFT + .' to access files in /etc).  Once added, you need to select it and make sure to "Always Trust" the certificate.
 
-Finally, if your certificate isn't for localhost, you must navigate to [app/config/proxy/envoyproxy.go](https://github.com/fmgornick/dynamic-proxy/blob/main/app/config/proxy/envoyproxy.go) and change the filenames of the keys and certs to whatever yours are named.  The place to actually alter the filenames is at the end of the file in the transportSocket function.  I'm planning on changing this in the future so it's no longer hard coded, but for now just deal with it!
+Finally, if your certificate isn't for localhost, you must navigate to [app/config/proxy/envoyproxy.go](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/app/config/proxy/envoyproxy.go) and change the filenames of the keys and certs to whatever yours are named.  The place to actually alter the filenames is at the end of the file in the transportSocket function.  I'm planning on changing this in the future so it's no longer hard coded, but for now just deal with it!
 
 ## <a name="flags"></a> flag information
 - `-add-http`: if you don't want to type the 'https://' prefix every time you try to use the proxy, you can set this flag and this program will add http listeners on the specified port which then just immediately route the their https counterpart.  When this flag is set, the https listeners are automatically set to port 11111 for internal and port 22222 for external.
@@ -139,7 +139,7 @@ The main application for this program is for websites with many upstream routes 
 ## extension
 If you would like to add to this project via adding configuration for other proxies, or accepting new user configurations, I tried my best to make this somewhat easily extensible.
 
-For adding a new type of configuration, you just need to add a file in the [parser directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/config/universal/config.go).  You can see how I made the parser for databags [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/utils/parser/databag.go).
+For adding a new type of configuration, you just need to add a file in the [parser directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/app/parser).  You just need to add implementation for turning the new config into a universal config that all proxies should be able to use defined [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/app/config/universal/config.go).  You can see how I made the parser for databags [here](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/app/parser/databag.go).
 
-For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/utils/processor) to turn the universal configuration into a specific proxy configuration.
+For adding a new proxy, you would need to add the new proxy config file (maybe some useful helper functions as well) in the [config/proxy directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/app/config/proxy).  Then you'll also want to add a file to the [processor directory](https://git.target.com/FletcherGornick/dynamic-proxy/tree/main/app/processor) to turn the universal configuration into a specific proxy configuration.
 
