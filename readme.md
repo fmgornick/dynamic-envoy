@@ -34,7 +34,7 @@ You can run the script with the following command (make sure you're in the proje
 ```sh
 ./scripts/run.sh
 ```
-This script sets flags based on environment variables defined in the  [`.env`](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/.env) file, and you can edit the file to alter some of the settings of the dynamic-proxy.  You can view the meaning of all the possible flags [here](#flags).
+This script sets flags based on environment variables defined in the  [`.env`](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/.env) file, and you can edit the file to alter some of the settings of the dynamic-proxy.  You can view the meaning of all the possible flags [here](#flags).  Note that it'll probably take around 10-15 seconds before envoy updates with the first configuration, so it may not work right away.
 
 If you would rather run everything yourself without the aid of a script, you can do the following...
 
