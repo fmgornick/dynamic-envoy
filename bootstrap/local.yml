@@ -15,7 +15,7 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: app
+                address: localhost
                 port_value: 6515
 
 dynamic_resources:
@@ -28,7 +28,6 @@ dynamic_resources:
       - envoy_grpc:
           cluster_name: xds_cluster
       set_node_on_first_message_only: true
-
   cds_config:
     resource_api_version: V3
     api_config_source:
