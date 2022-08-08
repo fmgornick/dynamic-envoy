@@ -23,10 +23,11 @@ var (
 	directory string
 
 	iAddr  string
-	eAddr  string
 	iPort  uint
-	ePort  uint
 	iCName string
+
+	eAddr  string
+	ePort  uint
 	eCName string
 )
 
@@ -40,10 +41,11 @@ func init() {
 	flag.StringVar(&directory, "dir", "databags/dev", "path to folder containing databag files")
 
 	flag.StringVar(&iAddr, "ia", "0.0.0.0", "address the proxy's internal listener listens on")
-	flag.StringVar(&eAddr, "ea", "0.0.0.0", "address the proxy's external listener listens on")
 	flag.UintVar(&iPort, "ip", 7777, "port number our internal listener listens on")
-	flag.UintVar(&ePort, "ep", 8888, "port number our external listener listens on")
 	flag.StringVar(&iCName, "icn", "localhost", "common name of internal listening address")
+
+	flag.StringVar(&eAddr, "ea", "0.0.0.0", "address the proxy's external listener listens on")
+	flag.UintVar(&ePort, "ep", 8888, "port number our external listener listens on")
 	flag.StringVar(&eCName, "ecn", "localhost", "common name of external listening address")
 
 	// initialize directory watcher
