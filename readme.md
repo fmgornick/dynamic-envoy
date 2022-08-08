@@ -24,24 +24,27 @@ You can see examples of how this application takes databag input in the form of 
 
 If you want to see a working example of this application, you can run it yourself with the following steps.  But first, you should generate a certificate on the address you'd like to listen on for routing to HTTPS websites.  You can see how to do that [here](#ssl).  
 
-Once an SSL certificate is generated, you can run the program through two methods.  The easiest method is to use the `docker-compose.yml` file I have provided which does most of the heavy lifting, I explain further [here](#docker), otherwise you can try running everything locally by looking [below](#local)
-
-Also, if running locally, make sure the static cluster address is set to localhost in the `bootstrap.yml` file.  It should automatically be set to app for use by docker.
+Once an SSL certificate is generated, you can run the program through two methods.  The easiest method is to use the `docker-compose.yml` file I have provided which does most of the heavy lifting, I explain further [here](#docker), otherwise you can try running everything locally by looking [below](#local).
 
 ### <a name="local"></a> running locally
 
-1. clone this repository:
-```sh
-git clone https://git.target.com/FletcherGornick/dynamic-proxy.git
-```
+If you have tmux installed, I've provided a script that starts the proxy as well as my program in separate tmux sessions.  It also opens up a third session in the `databags` directory, so you can make changes for this program to dynamically update.
 
-2. start envoy server (can also run in background with \'&\' suffix):
+You can run the script with the following command (make sure you're in the project's root directory):
+```sh
+./scripts/run.sh
+```
+This script sets flags based on environment variables defined in the  [`.env`](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/.env) file, and you can edit the file to alter some of the settings of the dynamic-proxy.  You can view the meaning of all the possible flags [here](#flags).
+
+If you would rather run everything yourself without the aid of a script, you can do the following...
+
+1. start envoy server (can also run in background with \'&\' suffix):
 ```sh
 envoy -c bootstrap.yml
 ```
 > I suggest using tmux in order to have a window to run envoy in as well as a separate window to run this program with.  Possibly even a third window for dynamically adding / deleting / modifying / moving databag files to update the envoy configuration at runtime
 
-3. run this program (use \'-h\' to see possible flags):
+2. run this program (use \'-h\' to see possible flags):
 ```sh
 go run main.go
 # or
@@ -73,21 +76,21 @@ go build
 > you can get a bit more of a detailed explanation of the flags [here](#flags)
 
 
-4.  If no flags changed, go to https://localhost:7777 or https://localhost:8888.  Make sure to append the paths specified in the databag backend objects in order to route to a valid upstream.
+3.  If no flags changed, go to https://localhost:7777 or https://localhost:8888.  Make sure to append the paths specified in the databag backend objects in order to route to a valid upstream.
 
-5. you can add / delete / modify / move files to the directory the application is watching and see as the envoy configuration updates real time.
+4. you can add / delete / modify / move files to the directory the application is watching (**default**: `./databags`) and see as the envoy configuration updates real time.
 
 
 ### <a name="docker"></a> run using docker
 the much simpler approach is to use docker.  To get everything running properly, you must first generate an SSL cert by running `./add-cert.sh hostname`.
 
-Now it's just a matter of setting variables.  This project should contain a `.env` file which you can use to change listener ports as well as the directory this app will watch.
+docker-compose sets flags based on environment variables defined in the  [`.env`](https://git.target.com/FletcherGornick/dynamic-proxy/blob/main/.env) file, and you can edit the file to alter some of the settings of the dynamic-proxy.  You can view the meaning of all the possible flags [here](#flags).
 
 Once you set the environment variables, you can just run `docker compose up -d`.  This will mount the databag directory onto my `fmgornick/dynamic-proxy` image running on a container titled "app", and can recieve updates when you make changes.
 
 There's also an `envoyproxy/envoy-dev` image running on the container "proxy" which depends on the "app" container.  With all this set up, you can alter the directory being watched by the "app" container and it should automatically update the changes and send them to the "proxy" container.
 
-You can see the output of the containers by running
+You can see the output of the containers by running...
 ```sh
 # to see output of envoy proxy
 docker logs proxy
@@ -96,13 +99,13 @@ docker logs proxy
 docker logs app
 ```
 
-and when you're done with everything, just run `docker compose down` to stop everything and clean up the containers
+and when you're done with everything, just run `docker compose down` to stop everything and clean up the containers.
 
 
 ## <a name="ssl"></a> generating SSL certificate for HTTPS connection
 I currently have a script that generates an SSL certificate + key for any given hostname.  To run it, just type the following command (replacing "hostname" with the hostname you want to generate a certificate for of course):
 ```sh
-./add-certs.sh hostname
+./scripts/add-certs.sh hostname
 ```
 
 This will create a new directory called "certs" in the root of this project.  Once the certificate is generated, you'll need to make sure your computer recognizes it.  If you're using a mac, you can do this by going into the 'Keychain Access' app.  Navigate to 'System' on the left sidebar, then go to File -> Import Items...  It will then prompt you to add your hostname.crt file, so just choose it from where you created / moved it (if you put it in the etc folder, then you'll need to do 'CMD + SHIFT + .' to access files in /etc).  Once added, you need to select it and make sure to "Always Trust" the certificate.
