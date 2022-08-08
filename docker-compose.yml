@@ -7,8 +7,8 @@ services:
     ports:
       - ${INTERNAL_PORT}:${INTERNAL_PORT} # internal port for envoy proxy to listen on
       - ${EXTERNAL_PORT}:${EXTERNAL_PORT} # external port for envoy proxy to listen on
-      - 48877:48877 # HTTP internal port = 7777 -> HTTPS internal port = 48877
-      - 48878:48878 # HTTP external port = 7777 -> HTTPS external port = 48877
+      - 48877:48877 # HTTP internal port used -> HTTPS internal port = 48877
+      - 48878:48878 # HTTP external port used -> HTTPS external port = 48878
     working_dir: /etc/envoy
     volumes:
       - ${PWD}/bootstrap/docker.yml:/etc/envoy/envoy.yaml # envoy configuration template
