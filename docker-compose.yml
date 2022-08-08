@@ -5,11 +5,15 @@ services:
     container_name: proxy
     image: envoyproxy/envoy-dev
     ports:
-      - ${INTERNAL}:7777
-      - ${EXTERNAL}:8888
+      # ports envoy proxy will listen on
+      - ${INTERNAL_PORT}:${INTERNAL_PORT}
+      - ${EXTERNAL_PORT}:${EXTERNAL_PORT}
+      # if add-http flag set, these will be the https ports
+      - 48877:48877
+      - 48878:48878
     working_dir: /etc/envoy
     volumes:
-      - ${PWD}/bootstrap.yml:/etc/envoy/envoy.yaml
+      - ${PWD}/bootstrap/docker.yml:/etc/envoy/envoy.yaml
       - ${PWD}/certs:/etc/envoy/certs
     depends_on: 
       - app
@@ -19,4 +23,13 @@ services:
     image: fmgornick/dynamic-proxy
     volumes:
       - ${PWD}/databags:/home/user/app/databags
-    command: ["-dir", "${DIR}"]
+    command: [
+      "-add-http=${HTTP}",
+      "-dir", "${DIR}",
+      "-ia", "${INTERNAL_ADDRESS}",
+      "-ip", "${INTERNAL_PORT}",
+      "-icn", "${INTERNAL_CNAME}",
+      "-ea", "${EXTERNAL_ADDRESS}",
+      "-ep", "${EXTERNAL_PORT}",
+      "-ecn", "${EXTERNAL_CNAME}",
+    ]
