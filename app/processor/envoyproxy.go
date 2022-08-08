@@ -149,7 +149,7 @@ func makeListeners(config *univcfg.Config, http bool) []types.Resource {
 			l := prxycfg.MakeHTTPListener(l)
 			resources = append(resources, l[0], l[1])
 		} else {
-			resources = append(resources, prxycfg.MakeHTTPSListener(l))
+			resources = append(resources, prxycfg.MakeHTTPSListener(l, false))
 		}
 	}
 

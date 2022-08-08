@@ -33,8 +33,24 @@ var clusterPolicy = map[string]int32{
 	"lb_policy_config": 7,
 }
 
+var httpsPorts = map[string]uint{
+	"internal": 48877,
+	"external": 48878,
+}
+
 // create listener envoyproxy configuration
-func MakeHTTPSListener(l *univcfg.Listener) *listener.Listener {
+func MakeHTTPSListener(l *univcfg.Listener, hasHttp bool) *listener.Listener {
+	var port *core.SocketAddress_PortValue
+	if hasHttp {
+		port = &core.SocketAddress_PortValue{
+			PortValue: uint32(httpsPorts[l.Name]),
+		}
+	} else {
+		port = &core.SocketAddress_PortValue{
+			PortValue: uint32(l.Port),
+		}
+	}
+
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -72,11 +88,9 @@ func MakeHTTPSListener(l *univcfg.Listener) *listener.Listener {
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
-					Protocol: core.SocketAddress_TCP,
-					Address:  l.Address,
-					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(l.Port),
-					},
+					Protocol:      core.SocketAddress_TCP,
+					Address:       l.Address,
+					PortSpecifier: port,
 				},
 			},
 		},
@@ -93,11 +107,6 @@ func MakeHTTPSListener(l *univcfg.Listener) *listener.Listener {
 }
 
 func MakeHTTPListener(l *univcfg.Listener) []*listener.Listener {
-	var httpsPorts = map[string]uint{
-		"internal": 11111,
-		"external": 22222,
-	}
-
 	routerpb, _ := anypb.New(&router.Router{})
 	manager, _ := anypb.New(&hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -154,7 +163,7 @@ func MakeHTTPListener(l *univcfg.Listener) []*listener.Listener {
 			}},
 		}},
 	}
-	https_listener := MakeHTTPSListener(l)
+	https_listener := MakeHTTPSListener(l, true)
 
 	return []*listener.Listener{http_listener, https_listener}
 }
