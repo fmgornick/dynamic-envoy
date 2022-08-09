@@ -1,6 +1,16 @@
+# for macs
 .DS_Store
-certs/
+
+# output executable
+dynamic-proxy
+
+# databag folders too big
 databags/prod/
 databags/stage/
+
+# product of cert creation script
+certs/
+
+# for checking test coverage
 *.html
 *.out
