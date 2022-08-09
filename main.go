@@ -61,10 +61,10 @@ func main() {
 	flag.Parse()
 	listenerInfo := univcfg.ListenerInfo{
 		InternalAddress:    iAddr,
-		ExternalAddress:    eAddr,
 		InternalPort:       iPort,
-		ExternalPort:       ePort,
 		InternalCommonName: iCName,
+		ExternalAddress:    eAddr,
+		ExternalPort:       ePort,
 		ExternalCommonName: eCName,
 	}
 	envoy = processor.NewProcessor("envoy-instance", addHttp, listenerInfo)

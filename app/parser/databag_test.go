@@ -22,6 +22,13 @@ var backends []usercfg.Backend = []usercfg.Backend{
 				},
 			},
 		},
+		HealthCheck: usercfg.HealthCheck{
+			Type: "http",
+			Path: "/path/name",
+			Host: "google",
+			Rise: 100,
+			Port: 1234,
+		},
 	},
 	{
 		Availability: []string{"external"},
@@ -97,6 +104,14 @@ func TestParse(t *testing.T) {
 
 	assert.Equal(t, uint8(1), config.Clusters["in"].Availability, "in cluster should be internal")
 	assert.Equal(t, uint8(2), config.Clusters["ex"].Availability, "ex cluster should be external")
+
+	assert.Equal(t, uint(100), config.Clusters["in"].HealthCheck.Healthy, "ex cluster should be external")
+	assert.Equal(t, "google", config.Clusters["in"].HealthCheck.Host, "ex cluster should be external")
+	assert.Equal(t, uint(5), config.Clusters["in"].HealthCheck.Interval, "ex cluster should be external")
+	assert.Equal(t, "/path/name", config.Clusters["in"].HealthCheck.Path, "ex cluster should be external")
+	assert.Equal(t, uint(1234), config.Clusters["in"].HealthCheck.Port, "ex cluster should be external")
+	assert.Equal(t, "http", config.Clusters["in"].HealthCheck.Type, "ex cluster should be external")
+	assert.Equal(t, uint(3), config.Clusters["in"].HealthCheck.Unhealthy, "ex cluster should be external")
 }
 
 func TestAddRoutes(t *testing.T) {

@@ -15,10 +15,10 @@ type Config struct {
 
 type ListenerInfo struct {
 	InternalAddress    string // address internal listener listens on
-	ExternalAddress    string // address external listener listens on
 	InternalPort       uint   // port internal listener listens on
-	ExternalPort       uint   // port external listener listens on
 	InternalCommonName string // fully qualified domain name of internal listener
+	ExternalAddress    string // address external listener listens on
+	ExternalPort       uint   // port external listener listens on
 	ExternalCommonName string // fully qualified domain name of external listener
 }
 
